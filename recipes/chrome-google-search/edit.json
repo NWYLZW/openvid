@@ -2,7 +2,7 @@
   "version": 1,
   "speed": 1.1,
   "padding": 16,
-  "roundedCorners": 16,
+  "roundedCorners": 6,
   "shadows": 24,
   "mockup": "chrome",
   "background": {

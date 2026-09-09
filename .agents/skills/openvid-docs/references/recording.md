@@ -32,3 +32,9 @@ pnpm openvid media inspect /absolute/run/assembled.mp4
 assembly.json 包含 output、可选偶数 width/height（默认1440×900）及 clips。每个 clip 的 file/start/end/speed/hold 定义源片段、倍速和末帧停留；时间单位秒，路径相对此 JSON。仅处理无声音视频。输出拒绝覆盖；同时生成 `.timeline.json` 保存源区间到输出时间的映射。实际时长仍以 ffprobe 为准。
 
 首个实例：[Google 搜索配方](../../../../recipes/chrome-google-search/RECIPE.md)。素材必须来自真实录制，不能把占位图片当作操作成功证据。
+
+## 鼠标与点击的呈现
+
+首个实际成片确认：此 CDP 采集流程没有系统鼠标，也没有额外的光标叠加。Codex 浏览器工具负责点击、输入和滚动；这些离散操作不保证产生连续可见的指针移动。工具截图里出现的指针标记也不能当成录制帧包含光标的证据。
+
+若用户需要鼠标演示，录制前明确选择含光标的系统窗口采集，或随新录制保存实际指针/点击事件并同步渲染光标。后者目前未实现；不要声称可以从既有无光标素材中精确恢复原始轨迹。
