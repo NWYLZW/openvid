@@ -53,3 +53,5 @@ await log.mark('result-ready');
 ```
 
 每次click或mark都立即写盘，方便中断后检查。创建时拒绝覆盖已有日志，后续原子保存；同一录制源的操作串行执行，每次都await。clock来自真正开始录制后的`openvidRecording.clock()`，不要用打开选择器时的时间。录制时长上限也要计入计划，超出原片时长的事件不能剪成成功操作。
+
+重新生成时若修改pointer计划的输出文件名，必须同时修改assembly计划各clip的file，使预剪消费新指针素材；只修改两个输出名会错误地复用旧输入。
