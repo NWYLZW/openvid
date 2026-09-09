@@ -7,6 +7,11 @@ import { resolve } from 'node:path';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const args = process.argv.slice(2);
 const command = args.shift() ?? 'help';
+if (command === 'record' || command === 'media') {
+  try { await (await import('./media.mjs')).mediaCommand(command, args); }
+  catch (error) { console.error(error.message); process.exit(1); }
+  process.exit(0);
+}
 let port = 3088;
 if (args[0] === '--port' && /^\d+$/.test(args[1] ?? '')) {
   port = Number(args[1]);
@@ -27,7 +32,7 @@ async function status() {
   }
 }
 if (command === 'help' || command === '--help') {
-  console.log(`Openvid local CLI\n\npnpm openvid status [--port 3088]  Check the editor (JSON; exit 1 if unavailable).\npnpm openvid start  [--port 3088]  Run the production build in the foreground.\n\nFirst setup: pnpm install --frozen-lockfile; cp .env.example .env.local; pnpm build\nStop a service started here with Ctrl+C. Existing services are left running.\nRecording, editing, and export currently use the browser; no CLI commands yet.`);
+  console.log(`Openvid local CLI\n\npnpm openvid status [--port 3088]  Check the editor (JSON; exit 1 if unavailable).\npnpm openvid start  [--port 3088]  Run the production build in the foreground.\n\nFirst setup: pnpm install --frozen-lockfile; cp .env.example .env.local; pnpm build\nStop a service started here with Ctrl+C. Existing services are left running.\nrecord encode <take-dir> <output.mp4>  Encode captured CDP frames.\nmedia assemble <plan.json>  Trim, retime, hold, and join silent clips.\nmedia inspect <file>  Inspect actual media.\nBrowser capture uses automation/cdp-recorder.mjs inside the computer-use REPL. Editor effects and export use Openvid.`);
 } else if (command === 'status') {
   const result = await status();
   console.log(JSON.stringify(result));

@@ -1,4 +1,7 @@
 "use client";
+import { useLocalAutomation } from "@/hooks/useLocalAutomation";
+import { parseLocalEdit } from "@/lib/local-edit";
+import { VIDEO_Z_INDEX } from "@/lib/constants";
 import { isLocalOnly } from "@/lib/local-mode";
 
 import { useState, useRef, useEffect, useCallback, lazy, Suspense, useMemo } from "react";
@@ -2754,6 +2757,53 @@ export default function Editor() {
             justEndedRef.current = false;
         }, 300);
     }, [trimRange.end, videoDuration, syncAudioPlayback]);
+
+    useLocalAutomation({
+        state: () => ({
+            ready: isVideoMode && !isRestoringProjectRef.current && videoClips.length > 0 &&
+                !!videoRef.current && videoRef.current.readyState >= 2 &&
+                ["idle", "complete", "error"].includes(exportProgress.status),
+            duration: videoDuration,
+            currentTime,
+            exportProgress,
+            project: buildVideoProjectSnapshot(),
+        }),
+        apply: (input) => {
+            const edit = parseLocalEdit(input, videoDuration);
+            handleSeek(0);
+            setIsPlaying(false);
+            videoRef.current?.pause();
+            handleGlobalSpeedChange(edit.speed);
+            setAspectRatio("16:9");
+            setCustomDimensions(null);
+            setCropArea(undefined);
+            setPadding(edit.padding);
+            setRoundedCorners(edit.roundedCorners);
+            setShadows(edit.shadows);
+            setMockupId(edit.mockup);
+            setMockupConfig({ darkMode: true, frameColor: "#18232e", url: "Google Search", headerScale: 75, headerOpacity: 100, cornerRadius: edit.roundedCorners });
+            setBackgroundTab("color");
+            setSelectedWallpaper(0);
+            setBackgroundColorConfig({ type: "gradient", config: { type: "linear", direction: "to-br", stops: [{ color: edit.background.from, position: 0 }, { color: edit.background.to, position: 100 }] } });
+            setZoomMovements([]);
+            setZoomFragments(edit.zooms.map((z, i) => ({
+                id: `recipe-zoom-${i}`, startTime: z.start, endTime: z.end,
+                zoomLevel: z.level, speed: z.speed, focusX: z.x, focusY: z.y,
+                enable3D: z.tiltX !== 0 || z.tiltY !== 0,
+                perspective3DIntensity: 60, perspective3DAngleX: z.tiltX, perspective3DAngleY: z.tiltY,
+            })));
+            setCanvasElements(edit.titles.map((t, i) => ({
+                id: `recipe-title-${i}`, type: "text" as const, content: t.text,
+                x: 50, y: t.y, width: 85, height: 8, rotation: 0, opacity: 1, zIndex: VIDEO_Z_INDEX + 1 + i,
+                fontSize: t.fontSize, fontFamily: "sans-serif", fontWeight: "medium" as const,
+                color: t.color, startTime: t.start, endTime: t.end,
+            })));
+            setMuteOriginalAudio(true);
+        },
+        save: async () => { await saveVideoProject(buildVideoProjectSnapshot()); },
+        seek: handleSeek,
+        export: handleExport,
+    });
 
     const autoSaveVideoProjectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 

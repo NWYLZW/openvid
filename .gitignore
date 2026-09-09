@@ -50,3 +50,5 @@ BACKEND_TESTING.md
 plan-integracion-openvid-autozoom.md
 /scripts
 .freebuff
+# Local recording takes and generated videos
+/recipes/**/runs/

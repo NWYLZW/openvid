@@ -196,3 +196,9 @@ hardware. The original noncommercial license still applies.
 Run `pnpm openvid help`, `pnpm openvid status`, or `pnpm openvid start` from this repository. The service CLI is intentionally small; editing and exporting currently use the browser.
 
 Repository skills: [openvid](.agents/skills/openvid/SKILL.md) routes tasks, [openvid-docs](.agents/skills/openvid-docs/SKILL.md) documents working operations, and [openvid-create](.agents/skills/openvid-create/SKILL.md) designs reusable recipes with scripts and progressively loaded context. Open this repository as the agent workspace to discover its skills, or explicitly read these entrypoints from another task. New capabilities are added when real usage requires them.
+
+### First real recipe: Chrome Google Search
+
+The [recipe](recipes/chrome-google-search/RECIPE.md) records real Chrome pages and produces a silent demo with retiming, Chrome framing, timed titles, zooms, and 3D tilt. `automation/cdp-recorder.mjs` runs with the computer-use tool's CDP capability. `pnpm openvid record encode`, `media assemble`, and `media inspect` handle recorded media; `window.openvid` exposes a small local-mode editing API using the existing editor. Read the [recording reference](.agents/skills/openvid-docs/references/recording.md) and [editing API reference](.agents/skills/openvid-docs/references/editing-api.md) only when needed.
+
+Validate the local edit recipe with `node --experimental-strip-types --test tests/local-edit.test.mjs` (Node 22+). Generated takes and run artifacts stay local under ignored recipe runs; no private recordings are committed.
