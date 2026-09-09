@@ -15,3 +15,9 @@ apply 仅覆盖本次已需要的字段，没有任意 React 状态注入。不�
 缩放 level 为 Openvid 的1–10级参数，不直接等于倍数。tiltX/tiltY 非零时启用缩放片段的3D效果。字幕由 API 放到 VIDEO_Z_INDEX 之上；不要用小于视频层的固定 zIndex。
 
 重现需要：同一源素材、edit.json、工程快照和实际工具版本。只导出工程参数 JSON 不包含视频字节，不能宣称是完整可移植工程包。保存成功后可刷新验证恢复。
+
+补充：`downloadSource()`下载当前加载的单个源Blob，返回fileName/bytes/type；它不导出整个多素材工程，也不自动确认浏览器下载完成。原生录屏使用后，必须检查实际文件的尺寸、时长和内容。
+
+素材替换：先通过界面 Upload 将文件放入库，再 `await sources()` 读取带id的库元信息，`await replaceSource(id)` 替换当前视频。复用现有上传处理器；准备失败会拒绝并保留旧clip映射，成功须等待新clip和媒体就绪才返回。替换会重建视频轨与默认缩放；随后重新apply本次配置。不要拿它作为追加素材命令。
+
+`await downloadSource()`现按工程唯一sourceId从素材库读取实际Blob，返回sourceId和文件信息；多来源工程明确拒绝，避免下载到另一段源。调用方必须await，并检查真实下载文件。

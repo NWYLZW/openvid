@@ -2,6 +2,7 @@ import { readFile, writeFile, mkdtemp, rm, access } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawn } from 'node:child_process';
+import { probeDuration } from './probe.mjs';
 
 function run(program, args) {
   return new Promise((resolvePromise, reject) => {
@@ -19,6 +20,9 @@ async function absent(path) {
 const encodeArgs = ['-an', '-c:v', 'libx264', '-preset', 'fast', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart'];
 
 export async function mediaCommand(command, args) {
+  if (command === 'media' && args[0] === 'pointer' && args.length === 2) {
+    return (await import('./pointer.mjs')).pointerCommand(args[1]);
+  }
   if (command === 'record' && args[0] === 'encode' && args.length === 3) {
     const dir = resolve(args[1]);
     const output = resolve(args[2]);
@@ -61,17 +65,19 @@ export async function mediaCommand(command, args) {
         const speed = clip.speed ?? 1;
         const hold = clip.hold ?? 0;
         if (typeof clip.file !== 'string' || ![clip.start, clip.end, speed, hold].every(finite) || clip.start < 0 || clip.end <= clip.start || speed < 0.1 || speed > 16 || hold < 0 || hold > 60) throw new Error(`Invalid clip ${index}`);
+        const sourceDuration = await probeDuration(resolve(base,clip.file));
+        if (clip.end > sourceDuration + .001) throw new Error(`Clip ${index} exceeds source duration ${sourceDuration}`);
         const part = resolve(temp, `${index}.mp4`);
         await run('ffmpeg', ['-hide_banner','-loglevel','error','-n','-ss',String(clip.start),'-t',String(clip.end-clip.start),'-i',resolve(base,clip.file),'-vf',`setpts=(PTS-STARTPTS)/${speed},fps=30,scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2,setsar=1,tpad=stop_mode=clone:stop_duration=${hold}`, ...encodeArgs, part]);
-        const duration = (clip.end - clip.start) / speed + hold;
+        const duration = await probeDuration(part);
         timeline.push({ ...clip, speed, outputStart: time, outputEnd: time + duration });
         time += duration;
       }
       const list = resolve(temp, 'list.txt');
       await writeFile(list, plan.clips.map((_,i) => `file ${quote(resolve(temp,`${i}.mp4`))}`).join('\n'));
       await run('ffmpeg',['-hide_banner','-loglevel','error','-n','-safe','0','-f','concat','-i',list,'-c','copy','-movflags','+faststart',output]);
-      await writeFile(`${output}.timeline.json`, JSON.stringify({ output, estimatedDuration: time, timeline }, null, 2));
-      console.log(JSON.stringify({ output, estimatedDuration: time }));
+      await writeFile(`${output}.timeline.json`, JSON.stringify({ output, measuredDuration: await probeDuration(output), timeline }, null, 2));
+      console.log(JSON.stringify({ output, measuredDuration: await probeDuration(output) }));
     } finally { await rm(temp, { recursive: true, force: true }); }
     return;
   }

@@ -55,7 +55,7 @@ interface UseEditorShortcutsParams {
     lastCopyActionRef: React.MutableRefObject<'element' | 'zoom' | 'motion' | 'audio' | null>;
 
     handleImageUploadToCanvas: (file: File) => void | Promise<void>;
-    handleVideoUpload: (file: File, options?: { forceReplace?: boolean }) => Promise<void>;
+    handleVideoUpload: (file: File, options?: { forceReplace?: boolean }) => Promise<string | null>;
 }
 
 export function useEditorShortcuts({

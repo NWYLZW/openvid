@@ -10,7 +10,7 @@
 时长可根据素材调整，源素材阶段与输出时间都需记录。用 Openvid 完成背景、外框、变速、缩放与 3D；若需预剪无信息等待，记录预处理参数。导出 MP4 后检查时长、尺寸、关键帧和完整可解码性。
 
 
-本次已验证配置保存在 [edit.json](edit.json)。导入剪好的素材后，在 computer-use REPL 中读取 [应用脚本](scripts/apply-edit.mjs)，向当前本地编辑器 CDP capability 传入配置路径。用 window.openvid.state() 核对，再 save() 和 export('1080p')。具体 API 说明按需读取仓库 openvid-docs/references/editing-api.md。
+旧CDP版本配置保存在 [edit.json](edit.json)；原生重录使用 [native-edit.json](native-edit.json)。执行时以本次run.md明确指定的配置为准。导入剪好的素材后，在 computer-use REPL 中读取 [应用脚本](scripts/apply-edit.mjs)，向当前本地编辑器 CDP capability 传入配置路径。用 window.openvid.state() 核对，再 save() 和 export('1080p')。具体 API 说明按需读取仓库 openvid-docs/references/editing-api.md。
 
 ## 首次成片反馈
 

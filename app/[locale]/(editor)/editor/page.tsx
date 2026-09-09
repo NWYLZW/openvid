@@ -2,6 +2,7 @@
 import { useLocalAutomation } from "@/hooks/useLocalAutomation";
 import { parseLocalEdit } from "@/lib/local-edit";
 import { VIDEO_Z_INDEX } from "@/lib/constants";
+import { downloadBlob } from "@/lib/video.utils";
 import { isLocalOnly } from "@/lib/local-mode";
 
 import { useState, useRef, useEffect, useCallback, lazy, Suspense, useMemo } from "react";
@@ -20,7 +21,7 @@ import { useVideoExport } from "@/hooks/useVideoExport";
 import { useVideoThumbnails, type VideoThumbnail } from "@/hooks/useVideoThumbnails";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { clearAllThumbnailCache } from "@/lib/thumbnail-cache";
-import { addVideoToLibrary, addVideoToLibraryWithMetadata, getLibraryVideoCount, getLibraryVideo, findExistingVideo } from "@/lib/videos-library";
+import { addVideoToLibrary, addVideoToLibraryWithMetadata, getLibraryVideoCount, getLibraryVideo, getLibraryVideoInfoList, findExistingVideo } from "@/lib/videos-library";
 import { calculateTotalDuration, clampClipToRealDuration, findNextClipPosition, getClipAtTime, probeMediaDuration, resequenceClips, reorderVideoClipAt, splitClipAtTime, type VideoTrackClip, probeMediaDimensions } from "@/types/video-track.types";
 import { remapOverlaysAfterClipChange } from "@/lib/timeline-overlay-remap";
 import type { ExportQuality, BackgroundTab, VideoCanvasHandle, BackgroundColorConfig, AspectRatio, CropArea } from "@/types";
@@ -1158,13 +1159,17 @@ export default function Editor() {
             setVideosLibraryRefresh(prev => prev + 1);
         } catch (error) {
             console.warn("Failed to add video to library:", error);
-            return;
+            return null;
         }
 
         if (hasExistingClips) {
             setActiveTool("video");
-            return;
+            return libraryVideo.id;
         }
+
+        // Stage the replacement before invalidating the currently loaded media.
+        const uploadedData = await uploadVideo(file);
+        if (!uploadedData || !libraryVideo) return null;
 
         clearClipUrls();
         videoBlobsRef.current.clear();
@@ -1183,8 +1188,7 @@ export default function Editor() {
         } catch (error) {
             console.warn("Failed to clear thumbnails:", error);
         }
-        const uploadedData = await uploadVideo(file);
-        if (uploadedData && libraryVideo) {
+        {
             lastLoadedVideoIdRef.current = uploadedData.videoId;
             setVideoUrl(uploadedData.url);
             setVideoId(uploadedData.videoId);
@@ -1214,6 +1218,7 @@ export default function Editor() {
             setCurrentTime(0);
             setIsPlaying(false);
             setTimeout(() => clearHistory(), 200);
+            return newClip.id;
         }
     }, [uploadVideo, clearHistory, showNewVideosBadge, clearClipUrls]);
 
@@ -2761,7 +2766,7 @@ export default function Editor() {
     useLocalAutomation({
         state: () => ({
             ready: isVideoMode && !isRestoringProjectRef.current && videoClips.length > 0 &&
-                !!videoRef.current && videoRef.current.readyState >= 2 &&
+                !!videoRef.current && videoRef.current.readyState >= 2 && !isExportingRef.current &&
                 ["idle", "complete", "error"].includes(exportProgress.status),
             duration: videoDuration,
             currentTime,
@@ -2801,6 +2806,26 @@ export default function Editor() {
             setMuteOriginalAudio(true);
         },
         save: async () => { await saveVideoProject(buildVideoProjectSnapshot()); },
+        sources: () => getLibraryVideoInfoList(),
+        replaceSource: async (id) => {
+            const source = await getLibraryVideo(id);
+            if (!source) throw new Error("Source not found in this browser library");
+            const mime = source.blob.type.split(";")[0].trim();
+            const clipId = await handleVideoUpload(new File([source.blob], source.fileName, { type: mime }), { forceReplace: true });
+            if (!clipId) throw new Error("Could not load replacement source; previous clips were retained");
+            return clipId;
+        },
+        downloadSource: async () => {
+            const sourceIds = [...new Set(videoClips.map(clip => clip.libraryVideoId))];
+            if (sourceIds.length !== 1) throw new Error("downloadSource requires a single-source project");
+            const source = await getLibraryVideo(sourceIds[0]);
+            if (!source) throw new Error("Source not found in this browser library");
+            const blob = source.blob;
+            const extension = blob.type.includes("mp4") ? "mp4" : "webm";
+            const fileName = `openvid-source-${Date.now()}.${extension}`;
+            downloadBlob(blob, fileName);
+            return { fileName, sourceId: source.id, bytes: blob.size, type: blob.type };
+        },
         seek: handleSeek,
         export: handleExport,
     });

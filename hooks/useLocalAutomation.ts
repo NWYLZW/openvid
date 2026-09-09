@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { isLocalOnly } from '@/lib/local-mode';
 import type { LocalEdit } from '@/lib/local-edit';
 import type { VideoProject } from '@/lib/video-project-cache';
-import type { ExportProgress, ExportQuality } from '@/types';
+import type { ExportProgress, ExportQuality, LibraryVideoInfo } from '@/types';
 
 interface AutomationState {
   ready: boolean;
@@ -17,12 +17,15 @@ interface LocalAutomation {
   state(): AutomationState;
   apply(edit: LocalEdit): Promise<AutomationState>;
   save(): Promise<void>;
+  sources(): Promise<LibraryVideoInfo[]>;
+  replaceSource(id: string): Promise<AutomationState>;
+  downloadSource(): Promise<{ fileName: string; sourceId: string; bytes: number; type: string }>;
   seek(time: number): void;
   export(quality: ExportQuality): void;
 }
 declare global { interface Window { openvid?: LocalAutomation } }
 
-export function useLocalAutomation(handlers: Omit<LocalAutomation, 'version' | 'apply'> & { apply(edit: LocalEdit): void }) {
+export function useLocalAutomation(handlers: Omit<LocalAutomation, 'version' | 'apply' | 'replaceSource'> & { apply(edit: LocalEdit): void; replaceSource(id: string): Promise<string> }) {
   const current = useRef(handlers);
   useEffect(() => { current.current = handlers; });
   useEffect(() => {
@@ -45,6 +48,20 @@ export function useLocalAutomation(handlers: Omit<LocalAutomation, 'version' | '
         return api.state();
       },
       async save() { ready(); await current.current.save(); },
+      sources: () => current.current.sources(),
+      async replaceSource(id) {
+        ready();
+        if (typeof id !== 'string' || !id) throw new Error('Source id required');
+        const clipId = await current.current.replaceSource(id);
+        const deadline = performance.now() + 10000;
+        await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+        while (!api.state().ready || api.state().project.videoClips[0]?.id !== clipId) {
+          if (performance.now() > deadline) throw new Error('Replacement did not become ready within 10 seconds');
+          await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+        }
+        return api.state();
+      },
+      downloadSource() { ready(); return current.current.downloadSource(); },
       seek(time) {
         ready();
         if (!Number.isFinite(time) || time < 0 || time > current.current.state().duration) throw new Error('Invalid seek time');

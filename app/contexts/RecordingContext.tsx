@@ -2,14 +2,30 @@
 
 import { createContext, useContext, ReactNode, useEffect } from "react";
 import { useScreenRecording } from "../../hooks/useScreenRecording";
+import { isLocalOnly } from "@/lib/local-mode";
 import type { RecordingState, RecordingContextType } from "@/types";
 
 export type { RecordingState, RecordingContextType };
+
+declare global {
+  interface Window {
+    openvidRecording?: {
+      clock(): { state: RecordingState; startedAtMs: number; surface: string | null };
+      stop(): void;
+    };
+  }
+}
 
 const RecordingContext = createContext<RecordingContextType | null>(null);
 
 export function RecordingProvider({ children }: { children: ReactNode }) {
   const recording = useScreenRecording();
+  useEffect(() => {
+    if (!isLocalOnly) return;
+    const api = { clock: recording.getRecordingClock, stop: recording.stopRecording };
+    window.openvidRecording = api;
+    return () => { if (window.openvidRecording === api) delete window.openvidRecording; };
+  }, [recording.getRecordingClock, recording.stopRecording]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

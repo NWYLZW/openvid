@@ -19,7 +19,8 @@ pnpm openvid start
 
 ## 编辑与导出时才读这里
 
-- 采集 Chrome 页面或预剪素材时，读取 [页面录制与素材 CLI](references/recording.md)。
+- 使用 Openvid Record 录制窗口/屏幕时，先读取 [原生录制](references/native-recording.md)，按真实素材验证来源与光标。
+- 用户明确选择 CDP 网页采集，或仅需预剪已有素材时，读取 [页面录制与素材 CLI](references/recording.md)。
 - 批量设置变速、缩放、3D、标题，或保存/导出时，读取 [本地编辑器 API](references/editing-api.md)。
 - 其他操作继续使用当前环境提供的浏览器工具，先读其操作说明。实际读页面后选按钮，不保存或复用旧 accessibility 索引。
 

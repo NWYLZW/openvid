@@ -1,4 +1,5 @@
 "use client";
+import { isLocalOnly } from "@/lib/local-mode";
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "@/navigation";
@@ -482,7 +483,7 @@ export function useScreenRecording() {
         cancelledRef.current = false;
         screenChunksRef.current = [];
         cameraChunksRef.current = [];
-        startTimeRef.current = Date.now();
+        startTimeRef.current = 0;
         const screenMime =
           pickSupportedMimeType([
             "video/webm;codecs=vp9,opus",
@@ -764,7 +765,7 @@ export function useScreenRecording() {
   }, [cleanupStreams, restoreOriginals]);
 
   useEffect(() => {
-    if (recordingTime >= 120 && state === "recording") {
+    if (recordingTime >= (isLocalOnly ? 300 : 120) && state === "recording") {
       stopRecording();
     }
   }, [recordingTime, state, stopRecording]);
@@ -773,6 +774,11 @@ export function useScreenRecording() {
     state,
     countdown,
     recordingTime,
+    getRecordingClock: () => ({
+      state,
+      startedAtMs: screenRecorderRef.current?.state === "recording" ? startTimeRef.current : 0,
+      surface: screenStreamRef.current?.getVideoTracks()[0]?.getSettings().displaySurface ?? null,
+    }),
     error,
     startCountdown,
     stopRecording,

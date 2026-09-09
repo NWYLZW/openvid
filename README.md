@@ -202,3 +202,11 @@ Repository skills: [openvid](.agents/skills/openvid/SKILL.md) routes tasks, [ope
 The [recipe](recipes/chrome-google-search/RECIPE.md) records real Chrome pages and produces a silent demo with retiming, Chrome framing, timed titles, zooms, and 3D tilt. `automation/cdp-recorder.mjs` runs with the computer-use tool's CDP capability. `pnpm openvid record encode`, `media assemble`, and `media inspect` handle recorded media; `window.openvid` exposes a small local-mode editing API using the existing editor. Read the [recording reference](.agents/skills/openvid-docs/references/recording.md) and [editing API reference](.agents/skills/openvid-docs/references/editing-api.md) only when needed.
 
 Validate the local edit recipe with `node --experimental-strip-types --test tests/local-edit.test.mjs` (Node 22+). Generated takes and run artifacts stay local under ignored recipe runs; no private recordings are committed.
+
+### Native recording revision
+
+The current recipe uses Openvid **Record → Share screen → Window**, with Computer Use operating another tab in the same Chrome window. CDP only assists focus/clock/editor control; it does not capture the video. The [native recording reference](.agents/skills/openvid-docs/references/native-recording.md) records the successful sequence and actual limitations.
+
+Computer Use's software cursor was absent from the captured window, so `automation/native-pointer-log.mjs` logs actual command coordinates and `pnpm openvid media pointer <plan.json>` adds an explicitly synthetic pointer visualization before retiming. This is not an OS cursor trajectory. Local recording now allows 300 seconds; other apps/multi-window synchronization still need their own verification.
+
+Run `node --experimental-strip-types --test tests/*.test.mjs` for edit, source-boundary, pointer, and archival protection regression tests (Node 22+, ffmpeg/ffprobe required).

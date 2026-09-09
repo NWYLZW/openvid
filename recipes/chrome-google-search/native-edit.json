@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "speed": 1.1,
+  "padding": 16,
+  "roundedCorners": 6,
+  "shadows": 24,
+  "mockup": "chrome",
+  "background": {
+    "from": "#071b27",
+    "to": "#164e4d"
+  },
+  "zooms": [
+    {
+      "start": 1.5,
+      "end": 2.9,
+      "level": 1,
+      "speed": 5,
+      "x": 50,
+      "y": 50,
+      "tiltX": -6,
+      "tiltY": 8
+    },
+    {
+      "start": 4.2,
+      "end": 6.8,
+      "level": 1.3,
+      "speed": 5,
+      "x": 50,
+      "y": 50,
+      "tiltX": 0,
+      "tiltY": 0
+    },
+    {
+      "start": 10.9,
+      "end": 12,
+      "level": 1.1,
+      "speed": 5,
+      "x": 50,
+      "y": 50,
+      "tiltX": 0,
+      "tiltY": 0
+    },
+    {
+      "start": 18.3,
+      "end": 23.2,
+      "level": 1.1,
+      "speed": 5,
+      "x": 50,
+      "y": 50,
+      "tiltX": 6,
+      "tiltY": -8
+    },
+    {
+      "start": 26.4,
+      "end": 27.5,
+      "level": 1,
+      "speed": 5,
+      "x": 50,
+      "y": 50,
+      "tiltX": -5,
+      "tiltY": 7
+    }
+  ],
+  "titles": [
+    {
+      "text": "从一个问题开始",
+      "start": 0,
+      "end": 1.4,
+      "y": 6,
+      "fontSize": 34,
+      "color": "#d6fff3"
+    },
+    {
+      "text": "输入问题，开始探索",
+      "start": 3,
+      "end": 4.1,
+      "y": 6,
+      "fontSize": 34,
+      "color": "#d6fff3"
+    },
+    {
+      "text": "浏览结果 · 找到线索",
+      "start": 9.09,
+      "end": 10.8,
+      "y": 6,
+      "fontSize": 34,
+      "color": "#d6fff3"
+    },
+    {
+      "text": "让灵感变得可见",
+      "start": 13.62,
+      "end": 18.2,
+      "y": 6,
+      "fontSize": 34,
+      "color": "#d6fff3"
+    },
+    {
+      "text": "打开页面，了解更多",
+      "start": 24.6,
+      "end": 26.3,
+      "y": 6,
+      "fontSize": 34,
+      "color": "#d6fff3"
+    },
+    {
+      "text": "搜索 → 探索 → 找到灵感",
+      "start": 27.6,
+      "end": 29.2,
+      "y": 6,
+      "fontSize": 34,
+      "color": "#d6fff3"
+    }
+  ]
+}
