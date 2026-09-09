@@ -1,4 +1,5 @@
 "use client";
+import { isLocalOnly } from "@/lib/local-mode";
 
 import { useState, useRef, useEffect, useCallback, lazy, Suspense, useMemo } from "react";
 import { Icon } from "@iconify/react";
@@ -1036,7 +1037,7 @@ export default function Editor() {
     const router = useRouter();
 
     const handleExport = useCallback((quality: ExportQuality) => {
-        if (!authUser) {
+        if (!isLocalOnly && !authUser) {
             savePendingExport(quality);
             router.replace({
                 pathname: "/login",
@@ -1091,7 +1092,7 @@ export default function Editor() {
 
     // Reanuda una exportación pendiente tras iniciar sesión (redirect login → editor)
     useEffect(() => {
-        if (!isVideoMode || authLoading || !authUser) return;
+        if (isLocalOnly || !isVideoMode || authLoading || !authUser) return;
 
         let timer: ReturnType<typeof setInterval> | null = null;
         let attempts = 0;

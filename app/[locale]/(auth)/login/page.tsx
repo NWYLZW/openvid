@@ -1,4 +1,6 @@
 "use client";
+import { isLocalOnly } from "@/lib/local-mode";
+import { redirect } from "next/navigation";
 
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
@@ -54,6 +56,12 @@ function buildOAuthCallbackUrl(locale: string, redirectedFrom: string | null) {
 }
 
 export default function Login() {
+  const locale = useLocale();
+  if (isLocalOnly) redirect(`/${locale}/editor`);
+  return <CloudLogin />;
+}
+
+function CloudLogin() {
   const t = useTranslations("login");
   const locale = useLocale();
   const [loading, setLoading] = useState<OAuthProvider | null>(null);

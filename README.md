@@ -136,20 +136,49 @@
 - Supabase Storage - cloud backups (coming soon)
 ---
 
-## Quick Start
+## Quick Start — local mode
+
+This fork supports editing and exporting without an account, Supabase, or any API key.
+
 ```bash
-# Install dependencies
-pnpm install
-
-# Setup environment
-cp .env.example .env
-# Add your Supabase credentials
-
-# Start development server
-pnpm dev
+pnpm install --frozen-lockfile
+cp .env.example .env.local
+pnpm dev --hostname 127.0.0.1
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open http://localhost:3000/en/editor for video, or
+http://localhost:3000/en/editor?mode=photo for images.
+
+For a production build:
+
+```bash
+pnpm build
+pnpm start --hostname 127.0.0.1
+```
+
+`NEXT_PUBLIC_LOCAL_ONLY=true` in the example enables local mode. It is a
+**build-time** setting: restart development or rebuild production after changing it.
+No placeholder Supabase credentials are needed. When the flag is unset or `false`,
+the original account integration remains enabled and requires your own Supabase
+URL, anonymous key, OAuth providers, and database setup.
+
+Local mode:
+
+- Keeps video/image editing, device mockups, zooms, audio, and local exports.
+- Exports videos without redirecting to login. Does not create a fake user/session.
+- Skips Supabase session refresh and profile access; hides account, sign-out,
+  cloud feedback, and online stock-photo search controls.
+- Disables feedback and scheduled-email endpoints (404), and Google Analytics.
+- Redirects login and OAuth callbacks back to the local editor.
+- Retains browser storage for projects and media. Use the same browser profile and
+  URL/port to return to your work; clearing site data removes those local copies.
+
+This mode removes the cloud-account requirement; it is **not a fully offline bundle**.
+Some fonts, icons, and 3D helper assets can still need internet access. Built-in
+backgrounds and uploaded images remain available. Image AVIF/WebP fallback encoding
+uses your own local Next.js server. Video export speed depends on the browser and
+hardware. The original noncommercial license still applies.
+
 
 ---
 

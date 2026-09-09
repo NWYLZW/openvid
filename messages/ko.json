@@ -310,6 +310,7 @@
     "backHome": "홈으로 돌아가기"
   },
   "userMenu": {
+    "localMode": "로컬 모드",
     "login": "로그인",
     "connectedWith": "{provider}(으)로 연결됨",
     "home": "홈",

@@ -310,6 +310,7 @@
     "backHome": "Back to Home"
   },
   "userMenu": {
+    "localMode": "Local mode",
     "login": "Sign in",
     "connectedWith": "Connected with {provider}",
     "home": "Home",

@@ -1,3 +1,4 @@
+import { isLocalOnly } from "@/lib/local-mode";
 import { type NextRequest, NextResponse } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { locales, defaultLocale } from "./i18n";
@@ -16,6 +17,16 @@ const intlMiddleware = createIntlMiddleware({
 
 export default async function proxy(request: NextRequest) {
   const country = request.headers.get("x-vercel-ip-country") || "UNKNOWN";
+
+  if (isLocalOnly) {
+    if (request.nextUrl.pathname.endsWith("/login")) {
+      const url = request.nextUrl.clone();
+      url.pathname = url.pathname.replace(/\/login$/, "/editor");
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+    return intlMiddleware(request);
+  }
 
   const needsAuth = shouldRefreshSession(request);
 

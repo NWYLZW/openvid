@@ -1,4 +1,5 @@
 "use client";
+import { isLocalOnly } from "@/lib/local-mode";
 import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
@@ -10,6 +11,8 @@ import { UserMenuDropdown } from "./UserMenuDropdown";
 export function UserMenu() {
   const t = useTranslations('userMenu');
   const { user, profile, loading } = useAuth();
+
+  if (isLocalOnly) return <span className="text-sm text-muted-foreground">{t("localMode")}</span>;
 
   if (loading) {
     return (

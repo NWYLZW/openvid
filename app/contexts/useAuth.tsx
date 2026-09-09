@@ -1,4 +1,5 @@
 "use client";
+import { isLocalOnly } from "@/lib/local-mode";
 
 import {
   createContext,
@@ -42,7 +43,23 @@ const PROFILE_REFRESH_EVENTS = new Set<AuthChangeEvent>([
   "PASSWORD_RECOVERY",
 ]);
 
+const LOCAL_AUTH: AuthContextType = {
+  user: null,
+  profile: null,
+  session: null,
+  loading: false,
+  signOut: async () => {},
+  refreshProfile: async () => {},
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  if (isLocalOnly) {
+    return <AuthContext.Provider value={LOCAL_AUTH}>{children}</AuthContext.Provider>;
+  }
+  return <CloudAuthProvider>{children}</CloudAuthProvider>;
+}
+
+function CloudAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);

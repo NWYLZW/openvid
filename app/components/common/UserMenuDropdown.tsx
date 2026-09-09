@@ -1,4 +1,5 @@
 "use client";
+import { isLocalOnly } from "@/lib/local-mode";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
@@ -66,7 +67,7 @@ export function UserMenuDropdown({
   const [theme, setTheme] = useState<Theme>("system");
   const [isSavingTheme, setIsSavingTheme] = useState(false);
   const themeSyncedRef = useRef(false);
-  const supabase = useMemo(() => createClient(), []);
+  const supabase = useMemo(() => isLocalOnly ? null : createClient(), []);
 
   const themeLabels: Record<Theme, string> = {
     light: t("themeLight"),
@@ -99,7 +100,7 @@ export function UserMenuDropdown({
   const handleThemeChange = async (next: Theme) => {
     if (next === theme) return;
     setTheme(next);
-    if (!user) return;
+    if (!user || !supabase) return;
     setIsSavingTheme(true);
     try {
       const { error } = await supabase
@@ -136,10 +137,10 @@ export function UserMenuDropdown({
           align="end"
         >
           <div className="px-3 py-2 mb-1 border-b border-border">
-            <p className="text-sm font-medium text-popover-foreground truncate">{displayName}</p>
+            <p className="text-sm font-medium text-popover-foreground truncate">{isLocalOnly ? t("localMode") : displayName}</p>
             <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             <p className="text-xs text-muted-foreground/80 mt-1 capitalize">
-              {t('connectedWith', { provider })}
+              {!isLocalOnly && t('connectedWith', { provider })}
             </p>
           </div>
 
@@ -199,7 +200,7 @@ export function UserMenuDropdown({
 
           <DropdownMenu.Separator className="h-px bg-border my-1" />
 
-          <SignOutItem router={router} />
+          {!isLocalOnly && <SignOutItem router={router} />}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>

@@ -306,6 +306,7 @@
     "backHome": "Volver al Inicio"
   },
   "userMenu": {
+    "localMode": "Modo local",
     "login": "Iniciar sesión",
     "connectedWith": "Conectado con {provider}",
     "home": "Inicio",

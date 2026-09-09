@@ -1,4 +1,5 @@
 "use client";
+import { isLocalOnly } from "@/lib/local-mode";
 
 import {
     useState,
@@ -841,7 +842,7 @@ export function LayersPanelInner({
                 )}
             </div>
             <div className="shrink-0 px-2 py-1.5 flex items-center justify-end">
-                <FeedbackWidget />
+                {!isLocalOnly && <FeedbackWidget />}
             </div>
             {selectedIds.length > 1 && (
                 <div className="shrink-0 border-t border-border px-2 py-1.5 flex items-center gap-1">

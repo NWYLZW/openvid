@@ -1234,6 +1234,7 @@
     }
   },
   "userMenu": {
+    "localMode": "Локальный режим",
     "login": "Войти",
     "connectedWith": "Подключено через {provider}",
     "home": "Главная",

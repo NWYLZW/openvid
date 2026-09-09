@@ -1,4 +1,5 @@
 "use client";
+import { isLocalOnly } from "@/lib/local-mode";
 
 import { useState, useEffect } from "react";
 import { Link, useRouter } from "@/navigation";
@@ -143,7 +144,7 @@ export function MobileMenu() {
           </nav>
 
           <div className="p-4 border-t border-white/5">
-            {user ? (
+            {isLocalOnly ? null : user ? (
               <button
                 onClick={handleSignOut}
                 disabled={isLoggingOut}

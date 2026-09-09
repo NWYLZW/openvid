@@ -1,6 +1,7 @@
+import { isLocalOnly } from "@/lib/local-mode";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { resend } from "@/utils/resend/client";
+
 import DailyTipEmail from "@/components/emails/DailyTipEmail";
 
 const BATCH_SIZE = Number(process.env.EMAIL_BATCH_SIZE ?? 90);
@@ -15,11 +16,16 @@ type EligibleUser = {
 };
 
 export async function POST(request: Request) {
+  if (isLocalOnly) {
+    return NextResponse.json({ error: "Unavailable in local mode" }, { status: 404 });
+  }
+
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { resend } = await import("@/utils/resend/client");
   const supabase = createAdminClient();
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 

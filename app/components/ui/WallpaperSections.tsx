@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WALLPAPER_CATEGORIES, type WallpaperCategory, type WallpaperItem } from "@/lib/wallpaper.catalog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { isLocalOnly } from "@/lib/local-mode";
 import { PhotoPickerPopover } from "./PhotoPickerPopover";
 import { TooltipAction } from "@/components/ui/tooltip-action";
 import { useTranslations } from "next-intl";
@@ -81,7 +82,7 @@ export function OptionsGrid({ selectedIndex = -1, onSelect, onUnsplashSelect, on
         />
       </TooltipAction>
       <CustomImagePickerButton onSelect={onCustomImageSelect} />
-      <PhotoPickerPopover onSelect={(url) => onUnsplashSelect?.(url)} />
+      {!isLocalOnly && <PhotoPickerPopover onSelect={(url) => onUnsplashSelect?.(url)} />}
     </div>
   );
 }

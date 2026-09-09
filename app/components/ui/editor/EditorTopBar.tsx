@@ -1,4 +1,5 @@
 "use client";
+import { isLocalOnly } from "@/lib/local-mode";
 
 import { Icon } from "@iconify/react";
 import { ExportDropdown } from "../ExportDropdown";
@@ -142,7 +143,13 @@ export function EditorTopBar({
                     </TooltipAction>
                 </div>
 
-                {loading ? (
+                {isLocalOnly ? (
+                    <UserMenuDropdown
+                        showTheme
+                        editorMode={editorMode}
+                        trigger={<button className="px-3 text-sm" aria-label={t("auth.userMenu")}><Icon icon="lucide:settings" width="20" /></button>}
+                    />
+                ) : loading ? (
                     <div className="flex items-center gap-2 pl-3 border-l border-border ml-1">
                         <div className="hidden sm:flex flex-col items-end gap-1.5">
                             <div className="w-16 h-2.5 bg-muted rounded-sm animate-pulse"></div>

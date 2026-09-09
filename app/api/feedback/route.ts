@@ -1,3 +1,4 @@
+import { isLocalOnly } from "@/lib/local-mode";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
@@ -79,6 +80,10 @@ function isValidPayload(body: unknown): body is FeedbackPayload {
 }
 
 export async function POST(request: NextRequest) {
+  if (isLocalOnly) {
+    return NextResponse.json({ error: "Unavailable in local mode" }, { status: 404 });
+  }
+
   try {
     if (!isAllowedOrigin(request)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });

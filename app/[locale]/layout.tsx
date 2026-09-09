@@ -1,3 +1,4 @@
+import { isLocalOnly } from "@/lib/local-mode";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -202,7 +203,7 @@ export default async function LocaleLayout({
           <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
         </NextIntlClientProvider>
       </body>
-      {isProduction && gaId ? <GoogleAnalytics gaId={gaId} /> : null}
+      {!isLocalOnly && isProduction && gaId ? <GoogleAnalytics gaId={gaId} /> : null}
     </html>
   );
 }
