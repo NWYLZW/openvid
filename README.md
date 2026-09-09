@@ -190,3 +190,9 @@ hardware. The original noncommercial license still applies.
 <a href="https://github.com/CristianOlivera1/openvid/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=CristianOlivera1/openvid" />
 </a>
+
+## Incremental AI workflow
+
+Run `pnpm openvid help`, `pnpm openvid status`, or `pnpm openvid start` from this repository. The service CLI is intentionally small; editing and exporting currently use the browser.
+
+Repository skills: [openvid](.agents/skills/openvid/SKILL.md) routes tasks, [openvid-docs](.agents/skills/openvid-docs/SKILL.md) documents working operations, and [openvid-create](.agents/skills/openvid-create/SKILL.md) designs reusable recipes with scripts and progressively loaded context. Open this repository as the agent workspace to discover its skills, or explicitly read these entrypoints from another task. New capabilities are added when real usage requires them.
