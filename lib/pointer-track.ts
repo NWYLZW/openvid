@@ -118,7 +118,7 @@ export function pointerWarpPoint(x: number, y: number, cx: number, cy: number, r
 export function renderPointerTrack(ctx: CanvasRenderingContext2D, track: PointerTrack, time: number, width: number, height: number, referenceHeight = height): void {
   const sample = samplePointerTrack(track, time);
   if (!sample.position) return;
-  const distortions = sample.clicks.filter(c => c.effect === 'distort' && c.pressure !== 0);
+  const distortions = sample.clicks.filter(c => c.effect === 'distort' && Math.abs(c.pressure) > 1e-6);
   if (distortions.length && track.radius > 0 && track.strength > 0) {
     applyPointerDistortion(ctx.canvas, distortions.map(c => ({ x: c.x * width, y: c.y * height, radius: track.radius * width, amplitude: .35 * track.strength * c.pressure })));
   }

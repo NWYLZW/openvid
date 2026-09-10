@@ -67,7 +67,11 @@ export function applyPointerDistortion(target: HTMLCanvasElement, presses: Point
   gl.uniform1i(gl.getUniformLocation(program, 'count'), presses.length);
   gl.uniform4fv(gl.getUniformLocation(program, 'presses[0]'), new Float32Array(presses.flatMap(p => [p.x, p.y, p.radius, p.amplitude])));
   gl.drawArrays(gl.TRIANGLES, 0, 3);
-  const ctx = target.getContext('2d')!; ctx.clearRect(0, 0, target.width, target.height); ctx.drawImage(canvas, 0, 0);
+  const ctx = target.getContext('2d')!;
+  // Keep every pixel outside the affected circles in the original 2D surface.
+  ctx.save(); ctx.beginPath();
+  for (const press of presses) { ctx.moveTo(press.x + press.radius, press.y); ctx.arc(press.x, press.y, press.radius, 0, Math.PI * 2); }
+  ctx.clip(); ctx.globalCompositeOperation = 'copy'; ctx.drawImage(canvas, 0, 0); ctx.restore();
 }
 export function disposePointerDistortion(): void {
   if (!resources) return;
