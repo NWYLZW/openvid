@@ -20,3 +20,10 @@ test('rejects invalid numeric values and overlapping zooms', () => {
 test('unknown operations are not silently ignored', () => {
   assert.throws(() => parseLocalEdit({ ...fixture(), deleteProject: true }, 30), /Unknown edit field/);
 });
+
+test('accepts catalog wallpaper names and rejects invalid paths', () => {
+  const edit = fixture(); edit.background = {wallpaper: 'desktop-01'};
+  assert.equal(parseLocalEdit(edit, 30).background.wallpaper, 'desktop-01');
+  edit.background = {wallpaper: '../desktop-01.jpg'};
+  assert.throws(() => parseLocalEdit(edit, 30), /wallpaper/);
+});

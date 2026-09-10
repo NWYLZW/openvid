@@ -1,117 +1,95 @@
 {
   "version": 1,
-  "speed": 1.03,
+  "speed": 1,
   "padding": 8,
   "roundedCorners": 8,
   "shadows": 24,
   "mockup": "none",
   "background": {
-    "from": "#071b27",
-    "to": "#164e4d"
+    "wallpaper": "desktop-01"
   },
   "zooms": [],
   "titles": [],
   "camera": [
     {
-      "time": 0,
-      "scale": 1,
+      "scale": 1.12,
       "x": 0,
-      "y": 12,
-      "pitch": 62,
-      "yaw": 0,
-      "roll": 0,
-      "perspective": 1800
-    },
-    {
-      "time": 0.7,
-      "scale": 1,
-      "x": 0,
-      "y": 12,
-      "pitch": 62,
-      "yaw": 0,
-      "roll": 0,
-      "perspective": 1800
-    },
-    {
-      "time": 4.2,
-      "scale": 1,
-      "x": 0,
-      "y": 0,
-      "pitch": 0,
+      "y": 30,
+      "pitch": 48,
       "yaw": 0,
       "roll": 0,
       "perspective": 1800,
-      "easing": [
-        0.42,
-        0,
-        0.18,
-        1
-      ]
+      "time": 0
     },
     {
-      "time": 5,
-      "scale": 1,
+      "scale": 0.95,
       "x": 0,
       "y": 0,
-      "pitch": 0,
+      "pitch": 10,
       "yaw": 0,
       "roll": 0,
-      "perspective": 1800
-    },
-    {
-      "time": 6.7,
-      "scale": 2.05,
-      "x": -24,
-      "y": 14,
-      "pitch": 6,
-      "yaw": 34,
-      "roll": 0,
       "perspective": 1800,
+      "time": 2.4,
       "easing": [
-        0.16,
-        1,
         0.3,
+        0,
+        0.45,
         1
       ]
     },
     {
-      "time": 7.5,
-      "scale": 2.05,
-      "x": -24,
-      "y": 14,
-      "pitch": 6,
-      "yaw": 34,
-      "roll": 0,
-      "perspective": 1800
-    },
-    {
-      "time": 8.85,
       "scale": 1.85,
-      "x": -24,
-      "y": -20,
+      "x": -21,
+      "y": 12,
       "pitch": 6,
-      "yaw": 34,
+      "yaw": 32,
       "roll": 0,
       "perspective": 1800,
+      "time": 4.85,
       "easing": [
-        0.2,
+        0.35,
         0,
         0.2,
         1
       ]
     },
     {
-      "time": 9.25,
       "scale": 1.85,
-      "x": -24,
-      "y": -20,
+      "x": -21,
+      "y": 12,
       "pitch": 6,
-      "yaw": 34,
+      "yaw": 32,
       "roll": 0,
-      "perspective": 1800
+      "perspective": 1800,
+      "time": 7.4
     },
     {
-      "time": 11,
+      "scale": 1.75,
+      "x": -21,
+      "y": -20,
+      "pitch": 6,
+      "yaw": 32,
+      "roll": 0,
+      "perspective": 1800,
+      "time": 8.85,
+      "easing": [
+        0.3,
+        0,
+        0.2,
+        1
+      ]
+    },
+    {
+      "scale": 1.75,
+      "x": -21,
+      "y": -20,
+      "pitch": 6,
+      "yaw": 32,
+      "roll": 0,
+      "perspective": 1800,
+      "time": 9.25
+    },
+    {
       "scale": 1,
       "x": 0,
       "y": 0,
@@ -119,6 +97,7 @@
       "yaw": 0,
       "roll": 0,
       "perspective": 1800,
+      "time": 11,
       "easing": [
         0.22,
         1,
@@ -127,14 +106,14 @@
       ]
     },
     {
-      "time": 30.7,
       "scale": 1,
       "x": 0,
       "y": 0,
       "pitch": 0,
       "yaw": 0,
       "roll": 0,
-      "perspective": 1800
+      "perspective": 1800,
+      "time": 30.7
     }
   ]
 }

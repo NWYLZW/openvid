@@ -4,10 +4,10 @@ import { sampleMotionKeyframes } from '../lib/motion-keyframes.ts';
 import { parseLocalEdit } from '../lib/local-edit.ts';
 import { readFileSync } from 'node:fs';
 const recipe = () => JSON.parse(readFileSync(new URL('../recipes/chrome-google-search/camera-edit.json',import.meta.url),'utf8'));
-test('opening starts laid back and settles upright before the first pointer',()=>{
+test('camera arrives at the search pose before clicking and holds through typing',()=>{
  const frames=recipe().camera;
- assert.equal(sampleMotionKeyframes(frames,0).rotateX,62);
- assert.equal(sampleMotionKeyframes(frames,4.2).rotateX,0);
+ assert.ok(sampleMotionKeyframes(frames,0).rotateX > 30);
+ assert.deepEqual(sampleMotionKeyframes(frames,4.9), sampleMotionKeyframes(frames,5.14));
  assert.equal(sampleMotionKeyframes(frames,20).rotateX,0);
  assert.equal(sampleMotionKeyframes(frames,20).rotateY,0);
 });

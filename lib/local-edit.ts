@@ -8,7 +8,7 @@ export interface LocalEdit {
   roundedCorners: number;
   shadows: number;
   mockup: 'none' | 'chrome' | 'macos';
-  background: { from: string; to: string };
+  background: { from: string; to: string } | { wallpaper: string };
   zooms: Array<{ start: number; end: number; level: number; speed: number; x: number; y: number; tiltX: number; tiltY: number }>;
   titles: Array<{ text: string; start: number; end: number; y: number; fontSize: number; color: string }>;
 }
@@ -36,7 +36,11 @@ export function parseLocalEdit(input: unknown, duration: number): LocalEdit {
   for (const key of ['padding','roundedCorners','shadows']) number(input[key], 0, 100, key);
   if (!['none','chrome','macos'].includes(String(input.mockup))) throw new Error('Unsupported mockup');
   object(input.background);
-  color(input.background.from); color(input.background.to);
+  if ('wallpaper' in input.background) {
+    if (typeof input.background.wallpaper !== 'string' || !/^(desktop|gradient|pattern|minimal)-\d{2}$/.test(input.background.wallpaper)) throw new Error('Invalid wallpaper name');
+  } else {
+    color(input.background.from); color(input.background.to);
+  }
   if (!Array.isArray(input.zooms) || !Array.isArray(input.titles)) throw new Error('zooms and titles must be arrays');
   if (input.zooms.length > 100 || input.titles.length > 100) throw new Error('Too many elements');
   let end = 0;

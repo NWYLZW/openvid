@@ -1,6 +1,7 @@
 "use client";
 import { useLocalAutomation } from "@/hooks/useLocalAutomation";
 import { parseLocalEdit } from "@/lib/local-edit";
+import { WALLPAPER_CATEGORIES } from "@/lib/wallpaper.catalog";
 import { VIDEO_Z_INDEX } from "@/lib/constants";
 import { downloadBlob } from "@/lib/video.utils";
 import { isLocalOnly } from "@/lib/local-mode";
@@ -2775,6 +2776,12 @@ export default function Editor() {
         }),
         apply: (input) => {
             const edit = parseLocalEdit(input, videoDuration);
+            const wallpaper = 'wallpaper' in edit.background ? (() => {
+                const name = edit.background.wallpaper;
+                const item = WALLPAPER_CATEGORIES.flatMap(category => category.items).find(item => item.filename === name);
+                if (!item) throw new Error(`Unknown wallpaper: ${name}`);
+                return item;
+            })() : null;
             handleSeek(0);
             setIsPlaying(false);
             videoRef.current?.pause();
@@ -2787,9 +2794,17 @@ export default function Editor() {
             setShadows(edit.shadows);
             setMockupId(edit.mockup);
             setMockupConfig({ darkMode: true, frameColor: "#18232e", url: "Google Search", headerScale: 75, headerOpacity: 100, cornerRadius: edit.roundedCorners });
-            setBackgroundTab("color");
-            setSelectedWallpaper(0);
-            setBackgroundColorConfig({ type: "gradient", config: { type: "linear", direction: "to-br", stops: [{ color: edit.background.from, position: 0 }, { color: edit.background.to, position: 100 }] } });
+            setSelectedImageUrl("");
+            setUnsplashBgUrl("");
+            if (wallpaper) {
+                setBackgroundTab("wallpaper");
+                setSelectedWallpaper(wallpaper.index);
+                setBackgroundColorConfig(null);
+            } else if ('from' in edit.background) {
+                setBackgroundTab("color");
+                setSelectedWallpaper(0);
+                setBackgroundColorConfig({ type: "gradient", config: { type: "linear", direction: "to-br", stops: [{ color: edit.background.from, position: 0 }, { color: edit.background.to, position: 100 }] } });
+            }
             setMockupMotionFragments(edit.camera?.length ? [{
                 id: "recipe-camera", presetId: "none", intensity: 50, speed: 50,
                 startTime: 0, endTime: videoDuration, keyframes: edit.camera,

@@ -1,8 +1,8 @@
 # Chrome / Google 搜索演示
 
-当前用户采用[斜躺立起与侧斜近景版本](camera.md)，配置为camera-edit.json。下方保留历史制作路径；不要把旧版本的Chrome外框重新加回来。
+当前制作采用[连续镜头与鼠标编排版本](camera.md)，配置为camera-edit.json。下方保留历史制作路径；不要把旧版本的Chrome外框重新加回来。
 
-目标：约 25–30 秒、1920×1080、无声视频。真实展示打开 Google、输入同义搜索词（原生版用“Iceland northern lights best month”，旧CDP版用“冰岛 极光 最佳月份”）、浏览结果、查看图片和相关网页；加入变速、缩放、3D 效果、统一浏览器框与文字。不能伪造搜索结果。
+目标：约 25–30 秒、1920×1080、无声视频。真实展示打开 Google、输入同义搜索词（原生版用“Iceland northern lights best month”，旧CDP版用“冰岛 极光 最佳月份”）、浏览结果、查看图片和相关网页；加入变速、缩放、3D 效果和内置桌面壁纸。不能伪造搜索结果。
 
 - 当前重录要求使用 Openvid Record：先读 [原生录制经验](../../.agents/skills/openvid-docs/references/native-recording.md)，验证目标窗口和鼠标后再正式录制。
 - [record.md](record.md) 保留旧 CDP 采集的历史做法，不作为原生重录的默认路径。
@@ -17,4 +17,4 @@
 
 当前可复用的原生示例使用英文同义搜索词 `Iceland northern lights best month`，避免本次系统中文输入兼容性问题。采用 Openvid Record 的窗口捕获；CDP只用于录制页焦点、时钟读取及编辑器API，不采集视频帧。
 
-指针是Computer Use实际命令坐标驱动的展示动画，不是系统光标原始轨迹；必须如实说明。按录制时钟保存事件，先用 `media pointer` 处理源视频，再用 `media assemble` 预剪，最后应用 [原生示例编辑参数](native-edit.json)。每次新录制重新根据事件确定区间，不套用上次的绝对时间。
+指针是Computer Use实际命令坐标驱动的展示动画，不是系统光标原始轨迹；必须如实说明。按录制时钟保存事件；旧原生版先pointer再assemble，当前连续编排版先预剪无光标素材，再在剪辑时间轴上设计pointer和camera，详见camera.md。每次新录制重新根据事件确定区间，不套用上次的绝对时间。
