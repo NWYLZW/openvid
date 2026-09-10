@@ -6,6 +6,7 @@ import { ELEMENT_ROW_HEIGHT } from '@/types/timeline.types';
 interface LabelSidebarProps {
     audioLaneCount?: number;
     motionTracksCount?: number;
+    showCameraZoomRow?: boolean;
     pointerTracksCount?: number;
     elementLaneCount?: number;
     showMovementRow?: boolean;
@@ -14,6 +15,7 @@ interface LabelSidebarProps {
 export default function LabelSidebar({
     audioLaneCount = 0,
     motionTracksCount = 0,
+    showCameraZoomRow = false,
     pointerTracksCount = 0,
     elementLaneCount = 0,
     showMovementRow = false,
@@ -32,7 +34,7 @@ export default function LabelSidebar({
 
             <div
                 className="flex items-center px-3 border-t border-border"
-                style={{ height: ELEMENT_ROW_HEIGHT }}
+                style={{ height: ELEMENT_ROW_HEIGHT * (showCameraZoomRow ? 2 : 1) }}
             >
                 <span className="text-[9px] uppercase font-semibold tracking-wider text-muted-foreground">
                     {t('zoom')}

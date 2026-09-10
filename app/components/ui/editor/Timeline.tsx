@@ -4,6 +4,7 @@ import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-m
 import { formatTime, getZoomMultiplier } from "@/lib/video.utils";
 import { TIMELINE_LABEL_WIDTH, MIN_TRIM_DURATION } from "@/lib/constants";
 import { DEFAULT_MOVEMENT_DURATION, DEFAULT_ZOOM_FRAGMENT_DURATION, ELEMENT_ROW_HEIGHT, VIDEO_ROW_MAX_HEIGHT, VIDEO_ROW_MIN_HEIGHT, type TimelineProps } from "@/types/timeline.types";
+import { cameraZoomView } from "@/lib/camera-zoom-view";
 import LabelSidebar from "./LabelSidebar";
 import { ZoomFragmentTrackItem } from "./ZoomFragmentTrackItem";
 import { AudioFragmentTrackItem } from "./AudioFragmentTrackItem";
@@ -41,7 +42,7 @@ export function Timeline({
     onSelectZoomFragment,
     onAddZoomFragment,
     onUpdateZoomFragment,
-    onActivateZoomTool,
+    onActivateZoomTool, selectedCameraZoomId, onSelectCameraZoom,
     audioTracks = [],
     uploadedAudios = [],
     selectedAudioTrackId,
@@ -200,16 +201,19 @@ export function Timeline({
     );
 
     const showMovementRow = !!selectedFragmentForMovement?.movementEnabled;
+    const cameraZooms = useMemo(()=>mockupMotionFragments.map(cameraZoomView).filter((v):v is NonNullable<typeof v>=>v!==null),[mockupMotionFragments]);
+    const showCameraZoomRow = cameraZooms.length>0;
     const showPointerRow = mockupMotionFragments.some(f=>!!f.pointerTrack);
     const totalLanesCount = useMemo(() => {
         let count = 0;
         if (showMovementRow) count += 1;
         if (showPointerRow) count += 1;
+        if (showCameraZoomRow) count += 1;
         if (canvasElements.length > 0) count += elementLaneCount;
         if (audioTracks.length > 0) count += audioLaneCount;
         if (mockupMotionFragments.length > 0) count += 1;
         return count;
-    }, [showPointerRow, showMovementRow, canvasElements.length, elementLaneCount, audioTracks.length, audioLaneCount, mockupMotionFragments.length]);
+    }, [showCameraZoomRow, showPointerRow, showMovementRow, canvasElements.length, elementLaneCount, audioTracks.length, audioLaneCount, mockupMotionFragments.length]);
 
     useEffect(() => {
         if (!isDraggingTrim) {
@@ -540,7 +544,7 @@ export function Timeline({
                 <div className="flex-1 flex flex-col relative overflow-hidden">
                     <div
                         ref={trackRef}
-                        className={`flex-1 overflow-x-auto custom-scrollbar pr-2 ${audioTracks.length > 0 || elementLaneCount > 1 || canvasElements.length > 0 || showMovementRow || showPointerRow
+                        className={`flex-1 overflow-x-auto custom-scrollbar pr-2 ${audioTracks.length > 0 || elementLaneCount > 1 || canvasElements.length > 0 || showMovementRow || showPointerRow || showCameraZoomRow
                             ? "overflow-y-auto no-scrollbar"
                             : "overflow-y-hidden"
                             }`}
@@ -556,6 +560,7 @@ export function Timeline({
                             <LabelSidebar
                                 elementLaneCount={canvasElements.length > 0 ? elementLaneCount : 0}
                                 audioLaneCount={audioTracks.length > 0 ? audioLaneCount : 0}
+                                showCameraZoomRow={showCameraZoomRow}
                                 motionTracksCount={mockupMotionFragments.length}
                                 pointerTracksCount={mockupMotionFragments.filter(f=>f.pointerTrack).length}
                                 showMovementRow={showMovementRow}
@@ -740,6 +745,13 @@ export function Timeline({
                                             )}
                                         </div>
                                     </div>
+
+                                    {showCameraZoomRow && <div className="relative w-full shrink-0 border-y border-blue-400/20 bg-blue-500/5" style={{height:ELEMENT_ROW_HEIGHT}} aria-label="Camera zoom timeline">
+                                      {cameraZooms.map(z=><button key={z.id} aria-label={`Camera zoom ${z.min.toFixed(2)} to ${z.max.toFixed(2)}x`} aria-pressed={selectedCameraZoomId===z.id} className="absolute top-1 bottom-1 overflow-hidden rounded border border-blue-400/60 bg-blue-500/15 text-blue-600 dark:text-blue-300" style={{left:`${z.start/validDuration*100}%`,width:`${(z.end-z.start)/validDuration*100}%`}} onClick={e=>{e.stopPropagation();const rect=e.currentTarget.getBoundingClientRect();onSeek(z.start+(e.clientX-rect.left)/rect.width*(z.end-z.start));onSelectCameraZoom?.(z.id);}}>
+                                        <span className="absolute left-2 top-0 text-[10px]">Camera zoom · {z.min.toFixed(2)}–{z.max.toFixed(2)}×</span>
+                                        <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="absolute inset-x-1 bottom-0 h-7 w-[calc(100%-8px)]" aria-hidden="true"><polyline points={z.points} fill="none" stroke="currentColor" strokeWidth="1" vectorEffect="non-scaling-stroke"/></svg>
+                                      </button>)}
+                                    </div>}
 
                                     <div
                                         className="shrink-0 w-full flex items-center relative"

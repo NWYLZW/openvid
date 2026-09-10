@@ -9,6 +9,8 @@ import type { ImageProjectPreview } from "./image-project.types";
 import { MockupMotionFragment, MockupMotionPresetId } from "@/lib/mockup-motion";
 
 export interface ControlPanelProps {
+    selectedCameraZoomId?: string | null;
+    onSelectCameraZoom?: (id: string | null) => void;
     onCreatePointerTrack?: () => void;
     selectedPointerEventId?: string | null;
     onSelectPointerEvent?: (id: string | null) => void;

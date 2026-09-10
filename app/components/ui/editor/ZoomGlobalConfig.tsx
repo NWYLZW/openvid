@@ -8,12 +8,14 @@ import { formatZoomTime, zoomLevelToFactor } from "@/types/zoom.types";
 
 interface ZoomGlobalConfigProps {
     fragments: ZoomFragment[];
+    cameraZooms?: Array<{id:string;start:number;end:number;min:number;max:number}>;
+    onSelectCameraZoom?: (id:string)=>void;
     onSelectFragment: (fragmentId: string) => void;
     onAddFragment: () => void;
 }
 
 export function ZoomGlobalConfig({
-    fragments,
+    fragments, cameraZooms=[], onSelectCameraZoom,
     onSelectFragment,
     onAddFragment,
 }: ZoomGlobalConfigProps) {
@@ -28,6 +30,11 @@ export function ZoomGlobalConfig({
                 </div>
             </div>
 
+            {cameraZooms.length>0 && <section className="space-y-2">
+              <h3 className="text-xs font-medium">Camera zoom</h3>
+              <p className="text-xs text-muted-foreground">These zooms belong to camera keyframes. Edit the same parameters here or in Motion.</p>
+              {cameraZooms.map(z=><button key={z.id} className="w-full rounded border border-blue-400/50 bg-blue-500/5 p-3 text-left text-xs" onClick={()=>onSelectCameraZoom?.(z.id)}>Camera zoom · {z.min.toFixed(2)}–{z.max.toFixed(2)}× · {z.start.toFixed(1)}–{z.end.toFixed(1)}s</button>)}
+            </section>}
             {fragments.length > 0 && (
                 <div className="space-y-2">
                     <div className="text-[11px] uppercase tracking-widest text-muted-foreground font-bold">

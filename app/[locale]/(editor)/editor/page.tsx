@@ -239,6 +239,7 @@ export default function Editor() {
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [videoId, setVideoId] = useState<string | null>(null);
     const [videoDuration, setVideoDuration] = useState<number>(0);
+    const [selectedCameraZoomId, setSelectedCameraZoomId] = useState<string | null>(null);
     const [selectedPointerEventId, setSelectedPointerEventId] = useState<string | null>(null);
     const [currentTime, setCurrentTime] = useState<number>(0);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -2984,6 +2985,8 @@ export default function Editor() {
                                     </div>
                                 }>
                                     <ControlPanel
+                                        selectedCameraZoomId={selectedCameraZoomId}
+                                        onSelectCameraZoom={id=>{setSelectedCameraZoomId(id);if(id){handleSelectZoomFragment(null);handleSelectMockupMotionFragment(id);setActiveTool('zoom');}}}
                                         selectedPointerEventId={selectedPointerEventId}
                                         onSelectPointerEvent={setSelectedPointerEventId}
                                         onCreatePointerTrack={()=>{
@@ -3017,7 +3020,7 @@ export default function Editor() {
                                         isOpen={isControlPanelOpen}
                                         zoomFragments={zoomFragments}
                                         selectedZoomFragment={selectedZoomFragment}
-                                        onSelectZoomFragment={handleSelectZoomFragment}
+                                        onSelectZoomFragment={id=>{setSelectedCameraZoomId(null);handleSelectZoomFragment(id);}}
                                         onAddZoomFragment={() => handleAddZoomFragment(currentTime)}
                                         onUpdateZoomFragment={handleUpdateZoomFragment}
                                         onDeleteZoomFragment={handleDeleteZoomFragment}
@@ -3229,6 +3232,8 @@ export default function Editor() {
 
                             <Suspense fallback={<TimelineSkeleton />}>
                                 <Timeline
+                                    selectedCameraZoomId={selectedCameraZoomId}
+                                    onSelectCameraZoom={id=>{setSelectedCameraZoomId(id);handleSelectZoomFragment(null);handleSelectMockupMotionFragment(id);setActiveTool('zoom');}}
                                     selectedPointerEventId={selectedPointerEventId}
                                     onSelectPointerEvent={(fragmentId,eventId)=>{handleSelectMockupMotionFragment(fragmentId);setSelectedPointerEventId(eventId);setActiveTool('cursor');}}
                                     videoDuration={videoDuration}
@@ -3249,7 +3254,7 @@ export default function Editor() {
                                     onReorderVideoClip={handleReorderVideoClip}
                                     zoomFragments={zoomFragments}
                                     selectedZoomFragmentId={selectedZoomFragmentId}
-                                    onSelectZoomFragment={handleSelectZoomFragment}
+                                    onSelectZoomFragment={id=>{setSelectedCameraZoomId(null);handleSelectZoomFragment(id);}}
                                     onAddZoomFragment={handleAddZoomFragmentAtRange}
                                     onUpdateZoomFragment={handleUpdateZoomFragment}
                                     onActivateZoomTool={handleActivateZoomTool}
@@ -3342,7 +3347,7 @@ export default function Editor() {
                 onBackgroundColorChange={handleBackgroundColorChange}
                 zoomFragments={zoomFragments}
                 selectedZoomFragment={selectedZoomFragment}
-                onSelectZoomFragment={handleSelectZoomFragment}
+                onSelectZoomFragment={id=>{setSelectedCameraZoomId(null);handleSelectZoomFragment(id);}}
                 onAddZoomFragment={() => handleAddZoomFragment(currentTime)}
                 onUpdateZoomFragment={handleUpdateZoomFragment}
                 onDeleteZoomFragment={handleDeleteZoomFragment}

@@ -1,0 +1,183 @@
+{
+  "version": 1,
+  "speed": 1,
+  "padding": 8,
+  "roundedCorners": 8,
+  "shadows": 24,
+  "mockup": "none",
+  "background": {
+    "wallpaper": "desktop-01"
+  },
+  "zooms": [],
+  "titles": [],
+  "camera": [
+    {
+      "time": 0,
+      "scale": 1.12,
+      "x": 0,
+      "y": 30,
+      "pitch": 48,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800
+    },
+    {
+      "time": 0.55,
+      "scale": 0.95,
+      "x": 0,
+      "y": 0,
+      "pitch": 10,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800,
+      "easing": [
+        0.3,
+        0,
+        0.45,
+        1
+      ]
+    },
+    {
+      "time": 1.08,
+      "scale": 1.85,
+      "x": -21,
+      "y": 12,
+      "pitch": 6,
+      "yaw": 32,
+      "roll": 0,
+      "perspective": 1800,
+      "easing": [
+        0.35,
+        0,
+        0.2,
+        1
+      ]
+    },
+    {
+      "time": 4.0,
+      "scale": 1.85,
+      "x": -21,
+      "y": 12,
+      "pitch": 6,
+      "yaw": 32,
+      "roll": 0,
+      "perspective": 1800
+    },
+    {
+      "time": 4.6000000000000005,
+      "scale": 1.75,
+      "x": -21,
+      "y": -45,
+      "pitch": 6,
+      "yaw": 32,
+      "roll": 0,
+      "perspective": 1800,
+      "easing": [
+        0.37,
+        0,
+        0.63,
+        1
+      ]
+    },
+    {
+      "time": 5.1000000000000005,
+      "scale": 1.75,
+      "x": -21,
+      "y": -45,
+      "pitch": 6,
+      "yaw": 32,
+      "roll": 0,
+      "perspective": 1800
+    },
+    {
+      "time": 6.55,
+      "scale": 1,
+      "x": 0,
+      "y": 0,
+      "pitch": 0,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800,
+      "easing": [
+        0.22,
+        1,
+        0.36,
+        1
+      ]
+    },
+    {
+      "time": 7.433333,
+      "scale": 1,
+      "x": 0,
+      "y": 0,
+      "pitch": 0,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800
+    }
+  ],
+  "depthOfField": {
+    "compensateZoom": true,
+    "enabled": true,
+    "focus": {
+      "x": 0.4784787735849057,
+      "y": 0.4105263157894737
+    },
+    "maxBlurPx": 1.8,
+    "protectRect": {
+      "height": 0.085,
+      "width": 0.38,
+      "x": 0.3,
+      "y": 0.37
+    },
+    "softness": 85
+  },
+  "pointerTrack": {
+    "duration": 0.65,
+    "effect": "water",
+    "enabled": true,
+    "events": [
+      {
+        "id": "entry",
+        "kind": "move",
+        "time": 0,
+        "x": 0.51,
+        "y": 0.98
+      },
+      {
+        "id": "input-arrive",
+        "kind": "move",
+        "time": 1.08,
+        "travel": 1.08,
+        "x": 0.4784787735849057,
+        "y": 0.4105263157894737
+      },
+      {
+        "id": "input-focus",
+        "kind": "click",
+        "time": 1.2,
+        "x": 0.4784787735849057,
+        "y": 0.4105263157894737
+      },
+      {
+        "id": "search-arrive",
+        "kind": "move",
+        "time": 4.6000000000000005,
+        "travel": 0.5999999999999996,
+        "x": 0.4582312242040094,
+        "y": 0.8197368421052632
+      },
+      {
+        "id": "search-submit",
+        "kind": "click",
+        "time": 4.7,
+        "x": 0.4582312242040094,
+        "y": 0.8197368421052632
+      }
+    ],
+    "fps": 60,
+    "radius": 0.2,
+    "size": 28,
+    "strength": 1
+  }
+}

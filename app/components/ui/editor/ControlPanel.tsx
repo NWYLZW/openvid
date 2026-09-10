@@ -13,6 +13,8 @@ import { useTranslations } from "next-intl";
 import { ElementsMenuSkeleton, ZoomGlobalConfigSkeleton, MockupMenuSkeleton, WallpaperSkeleton, BackgroundColorSkeleton, ZoomFragmentEditorSkeleton, AudioMenuSkeleton, VideosMenuSkeleton, HistoryMenuSkeleton, MotionGlobalConfigSkeleton, MotionFragmentEditorSkeleton } from "../Skeleton";
 
 import { PointerTrackEditor } from "./PointerTrackEditor";
+import { CameraKeyframeEditor } from "./CameraKeyframeEditor";
+import { cameraZoomView } from "@/lib/camera-zoom-view";
 import { ElementsMenu } from "./ElementsMenu";
 import { TooltipAction } from "@/components/ui/tooltip-action";
 import { CameraMenu } from "./CameraMenu";
@@ -40,6 +42,7 @@ interface ExtendedControlPanelProps extends ControlPanelProps {
 
 export function ControlPanel({
     activeTool,
+    selectedCameraZoomId, onSelectCameraZoom,
     onCreatePointerTrack, selectedPointerEventId, onSelectPointerEvent,
     onSeek, currentTime,
     backgroundTab,
@@ -140,6 +143,7 @@ export function ControlPanel({
 }: ExtendedControlPanelProps) {
 
     const t = useTranslations("controlPanel");
+    const selectedCameraZoom=mockupMotionFragments.find(f=>f.id===selectedCameraZoomId && f.keyframes?.length);
     const { imagePhoneActive } = useMockup3dContext();
     const [isGlobalMotionEnabled, setIsGlobalMotionEnabled] = useState(true);
     const hasMockup2D = mediaType === "video" && !imagePhoneActive;
@@ -425,7 +429,13 @@ export function ControlPanel({
 
                 {activeTool === "zoom" && (
                     <>
-                        {selectedZoomFragment ? (
+                        {selectedCameraZoom ? (
+                            <CameraKeyframeEditor key={selectedCameraZoom.id} mode="zoom" fragment={selectedCameraZoom}
+                              currentTime={currentTime} onSeek={onSeek}
+                              onUpdate={updates=>onUpdateMockupMotionFragment?.(selectedCameraZoom.id,updates)}
+                              onDelete={()=>onUpdateMockupMotionFragment?.(selectedCameraZoom.id,{keyframes:selectedCameraZoom.keyframes!.map(k=>({...k,scale:1}))})}
+                              onClose={()=>onSelectCameraZoom?.(null)}/>
+                        ) : selectedZoomFragment ? (
                             <Suspense fallback={<ZoomFragmentEditorSkeleton />}>
                                 <ZoomFragmentEditor
                                     key={selectedZoomFragment.id}
@@ -450,6 +460,8 @@ export function ControlPanel({
                         ) : (
                             <Suspense fallback={<ZoomGlobalConfigSkeleton />}>
                                 <ZoomGlobalConfig
+                                    cameraZooms={mockupMotionFragments.map(cameraZoomView).filter((v):v is NonNullable<typeof v>=>v!==null)}
+                                    onSelectCameraZoom={id=>onSelectCameraZoom?.(id)}
                                     fragments={zoomFragments}
                                     onSelectFragment={(id) => onSelectZoomFragment?.(id)}
                                     onAddFragment={() => onAddZoomFragment?.()}

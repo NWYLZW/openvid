@@ -34,6 +34,8 @@ export interface TimelineProps {
     onAddZoomFragment?: (startTime: number, endTime: number) => void;
     onUpdateZoomFragment?: (fragmentId: string, updates: Partial<ZoomFragment>) => void;
     onActivateZoomTool?: () => void;
+    selectedCameraZoomId?: string | null;
+    onSelectCameraZoom?: (id:string)=>void;
     onActivateMotionTool?: () => void;
     selectedPointerEventId?: string | null;
     onSelectPointerEvent?: (fragmentId: string, eventId: string) => void;
