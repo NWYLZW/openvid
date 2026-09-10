@@ -1,0 +1,22 @@
+{
+  "name": "openvid",
+  "version": "0.1.0",
+  "description": "Editable Openvid video workflows, local CLI operation and reusable recipes.",
+  "author": {
+    "name": "NWYLZW",
+    "url": "https://github.com/NWYLZW"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Openvid",
+    "shortDescription": "Create editable demo videos with Openvid.",
+    "longDescription": "Three portable skills for operating a local Openvid checkout, designing reusable video recipes, and preserving human edits.",
+    "developerName": "NWYLZW",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Use Openvid to create an editable product demo video."
+  },
+  "homepage": "https://github.com/NWYLZW/openvid",
+  "repository": "https://github.com/NWYLZW/openvid",
+  "license": "PolyForm-Noncommercial-1.0.0"
+}

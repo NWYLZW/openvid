@@ -10,7 +10,7 @@
 
 apply 仅覆盖本次已需要的字段，没有任意 React 状态注入。不要用于仍需要保留当前图层的用户项目；新制作优先用明确的新工程环境。UI 动画与媒体帧显示可能稍晚于参数提交，截图验收需核对实际画面。
 
-精确格式见 [LocalEdit 定义与校验](../../../../lib/local-edit.ts)；可直接复用 [首个实际配置](../../../../recipes/chrome-google-search/edit.json) 和 [应用脚本](../../../../recipes/chrome-google-search/scripts/apply-edit.mjs)。配置中的 `version: 1`、speed、padding、roundedCorners、shadows、mockup、background、zooms 和 titles 都须提供。坐标为0–100百分比，颜色为#RRGGBB。当前只支持 none/chrome/macos 外框；缩放有序且不重叠。API 拒绝超出素材的区间。
+精确格式见 `<project>/lib/local-edit.ts`（LocalEdit 定义与校验）；可直接复用 `<project>/recipes/chrome-google-search/edit.json`（首个实际配置） 和 `<project>/recipes/chrome-google-search/scripts/apply-edit.mjs`（应用脚本）。配置中的 `version: 1`、speed、padding、roundedCorners、shadows、mockup、background、zooms 和 titles 都须提供。坐标为0–100百分比，颜色为#RRGGBB。当前只支持 none/chrome/macos 外框；缩放有序且不重叠。API 拒绝超出素材的区间。
 
 缩放 level 为 Openvid 的1–10级参数，不直接等于倍数。tiltX/tiltY 非零时启用缩放片段的3D效果。字幕由 API 放到 VIDEO_Z_INDEX 之上；不要用小于视频层的固定 zIndex。
 
@@ -22,7 +22,7 @@ apply 仅覆盖本次已需要的字段，没有任意 React 状态注入。不�
 
 `await downloadSource()`现按工程唯一sourceId从素材库读取实际Blob，返回sourceId和文件信息；多来源工程明确拒绝，避免下载到另一段源。调用方必须await，并检查真实下载文件。
 
-可选 `camera`：以源视频秒计的关键帧数组，字段 time/scale/x/y/pitch/yaw/roll/perspective。首帧time=0、时间严格递增；可以叠加原生zooms。位置百分比，角度为度。复用Motion轨道采样与渲染，界面显示Camera keyframes；配置入口在recipe/API。参考 [镜头配方](../../../../recipes/chrome-google-search/camera.md)。未提供camera时清除旧camera Motion片段。
+可选 `camera`：以源视频秒计的关键帧数组，字段 time/scale/x/y/pitch/yaw/roll/perspective。首帧time=0、时间严格递增；可以叠加原生zooms。位置百分比，角度为度。复用Motion轨道采样与渲染，界面显示Camera keyframes；配置入口在recipe/API。参考 `<project>/recipes/chrome-google-search/camera.md`（镜头配方）。未提供camera时清除旧camera Motion片段。
 
 camera关键帧可附加 easing=[x1,y1,x2,y2]，四个控制值限定0–1，绑定到达该帧的区间；未提供沿用默认S曲线。裁剪保留整条曲线的原始knots及easing，不重新启动缓动。原始视频的圆角和软阴影在预览/导出按相同画布长边单位缩放。
 

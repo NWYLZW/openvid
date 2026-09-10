@@ -52,3 +52,6 @@ plan-integracion-openvid-autozoom.md
 .freebuff
 # Local recording takes and generated videos
 /recipes/**/runs/
+
+# Generated skill/plugin distribution
+/dist/openvid-skills/

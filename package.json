@@ -9,7 +9,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "email": "email dev --dir ./components/emails"
+    "email": "email dev --dir ./components/emails",
+    "skills:install": "node cli/install-skills.mjs",
+    "skills:package": "node cli/package-skills.mjs"
   },
   "dependencies": {
     "@ffmpeg/core": "^0.12.10",

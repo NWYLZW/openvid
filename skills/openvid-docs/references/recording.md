@@ -31,7 +31,7 @@ pnpm openvid media inspect /absolute/run/assembled.mp4
 
 assembly.json 包含 output、可选偶数 width/height（默认1440×900）及 clips。每个 clip 的 file/start/end/speed/hold 定义源片段、倍速和末帧停留；时间单位秒，路径相对此 JSON。仅处理无声音视频。输出拒绝覆盖；同时生成 `.timeline.json` 保存源区间到输出时间的映射。实际时长仍以 ffprobe 为准。
 
-首个实例：[Google 搜索配方](../../../../recipes/chrome-google-search/RECIPE.md)。素材必须来自真实录制，不能把占位图片当作操作成功证据。
+首个实例：`<project>/recipes/chrome-google-search/RECIPE.md`（Google 搜索配方）。素材必须来自真实录制，不能把占位图片当作操作成功证据。
 
 ## 鼠标与点击的呈现
 

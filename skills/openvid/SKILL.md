@@ -5,6 +5,8 @@ description: 在本地 Openvid 中制作、复用或修改演示视频，按需�
 
 # Openvid 入口
 
+本发行包包含 openvid、openvid-docs、openvid-create 三个技能，应一起安装并使用相同版本。若相邻技能缺失，先完成整包安装，不假设当前技能内含编辑器或录制工具。技能位置与 Openvid 项目位置独立；实际执行前由 openvid-docs 的定位流程验证项目。
+
 先辨别用户要实际制作、复用已有流程、调整成片，还是仅讨论方案。保留用户选择的范围。
 
 - 启动、操作或排障：按需读取 [openvid-docs](../openvid-docs/SKILL.md)。

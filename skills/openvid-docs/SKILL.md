@@ -5,7 +5,11 @@ description: 查询本地 Openvid 的现有 CLI、启动方法、浏览器操作
 
 # 当前可用操作
 
-本文所在仓库根目录是相对路径 `../../..`。从仓库根目录执行命令；不要把 openvid.app 的同名云服务当成本项目。
+技能安装目录不是 Openvid 项目目录。先按[项目定位](references/project-location.md)找到并验证项目；不要从技能路径向上猜仓库位置。不要把 openvid.app 的同名云服务当成本项目。
+
+安装后的便携入口为本技能内 `scripts/openvid.mjs`：`node <本技能目录>/scripts/openvid.mjs --project <Openvid项目目录> locate` 验证位置，后续把 locate 换为 help/status/start。也支持 OPENVID_PROJECT，或从项目内部向上定位。没有项目时先按定位文档准备；不自动扫描用户主目录。
+
+以下命令均在已验证的项目根目录执行：
 
 ```sh
 pnpm openvid help

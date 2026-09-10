@@ -195,17 +195,19 @@ hardware. The original noncommercial license still applies.
 
 Run `pnpm openvid help`, `pnpm openvid status`, or `pnpm openvid start` from this repository. The service CLI is intentionally small; editing and exporting currently use the browser.
 
-Repository skills: [openvid](.agents/skills/openvid/SKILL.md) routes tasks, [openvid-docs](.agents/skills/openvid-docs/SKILL.md) documents working operations, and [openvid-create](.agents/skills/openvid-create/SKILL.md) designs reusable recipes with scripts and progressively loaded context. Open this repository as the agent workspace to discover its skills, or explicitly read these entrypoints from another task. New capabilities are added when real usage requires them.
+Portable skills: [openvid](skills/openvid/SKILL.md) routes tasks, [openvid-docs](skills/openvid-docs/SKILL.md) documents operations, and [openvid-create](skills/openvid-create/SKILL.md) designs reusable recipes. Canonical sources live in `skills/`; `.agents/skills/openvid*` links provide in-repository discovery.
+
+Install all three with `node cli/install-skills.mjs`, or build the Codex plugin with `node cli/package-skills.mjs`. See [installation, plugin packaging, and runtime setup](docs/SKILLS.md). The skill/plugin installation is separate from the Openvid editor checkout; no account configuration changes are made merely by packaging.
 
 ### First real recipe: Chrome Google Search
 
-The [recipe](recipes/chrome-google-search/RECIPE.md) records real Chrome pages and produces a silent demo with retiming, Chrome framing, timed titles, zooms, and 3D tilt. `automation/cdp-recorder.mjs` runs with the computer-use tool's CDP capability. `pnpm openvid record encode`, `media assemble`, and `media inspect` handle recorded media; `window.openvid` exposes a small local-mode editing API using the existing editor. Read the [recording reference](.agents/skills/openvid-docs/references/recording.md) and [editing API reference](.agents/skills/openvid-docs/references/editing-api.md) only when needed.
+The [recipe](recipes/chrome-google-search/RECIPE.md) preserves real screen footage and an editable project with camera motion, mouse events, click effects, depth of field, and retiming. Start at that entrypoint for the current version; older capture and framing examples remain historical references. `automation/cdp-recorder.mjs` runs with the computer-use tool's CDP capability. `pnpm openvid record encode`, `media assemble`, and `media inspect` handle recorded media; `window.openvid` exposes a small local-mode editing API using the existing editor. Read the [recording reference](.agents/skills/openvid-docs/references/recording.md) and [editing API reference](.agents/skills/openvid-docs/references/editing-api.md) only when needed.
 
 Validate the local edit recipe with `node --experimental-strip-types --test tests/local-edit.test.mjs` (Node 22+). Generated takes and run artifacts stay local under ignored recipe runs; no private recordings are committed.
 
 ### Native recording revision
 
-The current recipe uses Openvid **Record → Share screen → Window**, with Computer Use operating another tab in the same Chrome window. CDP only assists focus/clock/editor control; it does not capture the video. The [native recording reference](.agents/skills/openvid-docs/references/native-recording.md) records the successful sequence and actual limitations.
+Capture uses Openvid **Record → Share screen**; the current recipe documents whether the take uses a window or a browser tab and how cursor contamination is excluded. CDP only assists focus/clock/editor control; it does not capture the video. The [native recording reference](.agents/skills/openvid-docs/references/native-recording.md) records the successful sequence and actual limitations.
 
 Computer Use's software cursor was absent from the captured window, so `automation/native-pointer-log.mjs` logs actual command coordinates and `pnpm openvid media pointer <plan.json>` adds an explicitly synthetic pointer visualization before retiming. This is not an OS cursor trajectory. Local recording now allows 300 seconds; other apps/multi-window synchronization still need their own verification.
 
