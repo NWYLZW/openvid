@@ -1,5 +1,6 @@
 "use client";
 
+import { surfaceShadowCss } from "@/lib/surface-shadow";
 import type { MockupRenderProps } from "@/types/mockup.types";
 
 interface NoneMockupProps extends MockupRenderProps {
@@ -11,8 +12,8 @@ export function NoneMockup({ children, config, className = "", roundedCorners = 
         <div
             className={`relative w-full h-full overflow-hidden ${className}`}
             style={{
-                borderRadius: `${roundedCorners}px`,
-                boxShadow: shadows > 0 ? `0 ${shadows * 0.3}px ${shadows}px rgba(0,0,0,1)` : 'none',
+                borderRadius: `${roundedCorners / 8.96}cqmax`,
+                boxShadow: surfaceShadowCss(shadows),
             }}
         >
             {children}

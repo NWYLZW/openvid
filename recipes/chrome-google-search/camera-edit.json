@@ -2,8 +2,8 @@
   "version": 1,
   "speed": 1.03,
   "padding": 8,
-  "roundedCorners": 2,
-  "shadows": 16,
+  "roundedCorners": 8,
+  "shadows": 24,
   "mockup": "none",
   "background": {
     "from": "#071b27",
@@ -40,7 +40,13 @@
       "pitch": 0,
       "yaw": 0,
       "roll": 0,
-      "perspective": 1800
+      "perspective": 1800,
+      "easing": [
+        0.42,
+        0,
+        0.18,
+        1
+      ]
     },
     {
       "time": 5,
@@ -60,7 +66,13 @@
       "pitch": 6,
       "yaw": 34,
       "roll": 0,
-      "perspective": 1800
+      "perspective": 1800,
+      "easing": [
+        0.16,
+        1,
+        0.3,
+        1
+      ]
     },
     {
       "time": 7.5,
@@ -80,7 +92,13 @@
       "pitch": 6,
       "yaw": 34,
       "roll": 0,
-      "perspective": 1800
+      "perspective": 1800,
+      "easing": [
+        0.2,
+        0,
+        0.2,
+        1
+      ]
     },
     {
       "time": 9.25,
@@ -100,7 +118,13 @@
       "pitch": 0,
       "yaw": 0,
       "roll": 0,
-      "perspective": 1800
+      "perspective": 1800,
+      "easing": [
+        0.22,
+        1,
+        0.36,
+        1
+      ]
     },
     {
       "time": 30.7,

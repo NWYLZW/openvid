@@ -2314,7 +2314,7 @@ function VideoCanvasInner({
                                                                     transformOrigin: "center center",
                                                                     opacity: mockupMotionPreview.opacity,
                                                                     filter: mockupMotionPreview.blurPx > 0.4 ? `blur(${mockupMotionPreview.blurPx}px)` : undefined,
-                                                                    transition: "transform 80ms linear, filter 80ms linear, opacity 80ms linear",
+                                                                    transition: hasCameraKeyframes ? undefined : "transform 80ms linear, filter 80ms linear, opacity 80ms linear",
                                                                 }
                                                                 : undefined
                                                         }

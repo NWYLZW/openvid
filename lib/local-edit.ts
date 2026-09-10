@@ -61,6 +61,10 @@ export function parseLocalEdit(input: unknown, duration: number): LocalEdit {
       number(frame.time, 0, duration, 'camera time');
       if ((frame.time as number) <= previous) throw new Error('Camera times must strictly increase');
       previous = frame.time as number;
+      if (frame.easing !== undefined) {
+        if (!Array.isArray(frame.easing) || frame.easing.length !== 4) throw new Error('Expected four cubic-bezier values');
+        for (const value of frame.easing) number(value, 0, 1, 'easing');
+      }
       number(frame.scale, .2, 4, 'camera scale');
       number(frame.x, -100, 100, 'camera x'); number(frame.y, -100, 100, 'camera y');
       number(frame.pitch, -80, 80, 'pitch'); number(frame.yaw, -65, 65, 'yaw');

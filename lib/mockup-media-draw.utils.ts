@@ -1,3 +1,4 @@
+import { surfaceShadowLayers } from "./surface-shadow";
 import type { MutableRefObject } from "react";
 import type { VideoCanvasProps } from "@/types";
 import {
@@ -99,21 +100,33 @@ export function drawMockupAndMedia(
   if (mockupMotion) c.globalAlpha *= mockupMotion.opacity;
 
   if (shadows > 0 && !SELF_SHADOWING_MOCKUPS.includes(mockupId)) {
-    const shadowKey = `${containerWidth.toFixed(1)}x${containerHeight.toFixed(1)}|${scaledRadius.toFixed(1)}|${scaledShadowBlur.toFixed(1)}`;
+    const softShadow = mockupId === "none";
+    const shadowKey = `${softShadow ? "soft" : "legacy"}|${containerWidth.toFixed(1)}x${containerHeight.toFixed(1)}|${scaledRadius.toFixed(1)}|${scaledShadowBlur.toFixed(1)}`;
     let cached = shadowCacheRef.current;
     if (!cached || cached.key !== shadowKey) {
-      const margin = Math.ceil(scaledShadowBlur * 3 + scaledShadowBlur * 0.3 + 8);
+      const margin = Math.ceil(scaledShadowBlur * (softShadow ? 5 : 3.3) + 8);
       const buf = document.createElement('canvas');
       buf.width = Math.ceil(containerWidth) + margin * 2;
       buf.height = Math.ceil(containerHeight) + margin * 2;
       const bctx = buf.getContext('2d');
       if (bctx) {
-        bctx.shadowColor = 'rgba(0, 0, 0, 1)';
-        bctx.shadowBlur = scaledShadowBlur;
-        bctx.shadowOffsetY = scaledShadowBlur * 0.3;
-        bctx.fillStyle = 'black';
-        drawRoundedRect(bctx, margin, margin, containerWidth, containerHeight, scaledRadius);
-        bctx.fill();
+        const layers = softShadow ? surfaceShadowLayers(scaledShadowBlur) : [{ y: scaledShadowBlur * .3, blur: scaledShadowBlur, opacity: 1 }];
+        for (const layer of layers) {
+          bctx.shadowColor = `rgba(0,0,0,${layer.opacity})`;
+          bctx.shadowBlur = layer.blur;
+          bctx.shadowOffsetY = layer.y;
+          bctx.fillStyle = 'black';
+          drawRoundedRect(bctx, margin, margin, containerWidth, containerHeight, scaledRadius);
+          bctx.fill();
+        }
+        if (softShadow) {
+          bctx.shadowColor = 'transparent';
+          bctx.shadowBlur = 0;
+          bctx.shadowOffsetY = 0;
+          bctx.globalCompositeOperation = 'destination-out';
+          drawRoundedRect(bctx, margin, margin, containerWidth, containerHeight, scaledRadius);
+          bctx.fill();
+        }
       }
       cached = { key: shadowKey, canvas: buf, offsetX: margin, offsetY: margin };
       shadowCacheRef.current = cached;

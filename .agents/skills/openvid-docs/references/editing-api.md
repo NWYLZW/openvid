@@ -23,3 +23,5 @@ apply 仅覆盖本次已需要的字段，没有任意 React 状态注入。不�
 `await downloadSource()`现按工程唯一sourceId从素材库读取实际Blob，返回sourceId和文件信息；多来源工程明确拒绝，避免下载到另一段源。调用方必须await，并检查真实下载文件。
 
 可选 `camera`：以源视频秒计的关键帧数组，字段 time/scale/x/y/pitch/yaw/roll/perspective。首帧time=0、时间严格递增；不能同时使用zooms。位置百分比，角度为度。复用Motion轨道采样与渲染，界面显示Camera keyframes；配置入口在recipe/API。参考 [镜头配方](../../../../recipes/chrome-google-search/camera.md)。未提供camera时清除旧camera Motion片段。
+
+camera关键帧可附加 easing=[x1,y1,x2,y2]，四个控制值限定0–1，绑定到达该帧的区间；未提供沿用默认S曲线。裁剪保留整条曲线的原始knots及easing，不重新启动缓动。原始视频的圆角和软阴影在预览/导出按相同画布长边单位缩放。
