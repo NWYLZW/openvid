@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "speed": 1,
+  "padding": 8,
+  "roundedCorners": 8,
+  "shadows": 24,
+  "mockup": "none",
+  "background": {
+    "wallpaper": "desktop-01"
+  },
+  "zooms": [],
+  "titles": [],
+  "camera": [
+    {
+      "perspective": 1800,
+      "pitch": 48,
+      "roll": 0,
+      "scale": 1.12,
+      "time": 0,
+      "x": 0,
+      "y": 30,
+      "yaw": 0
+    },
+    {
+      "easing": [
+        0.3,
+        0,
+        0.45,
+        1
+      ],
+      "perspective": 1800,
+      "pitch": 10,
+      "roll": 0,
+      "scale": 0.95,
+      "time": 0.6,
+      "x": 0,
+      "y": 0,
+      "yaw": 0
+    },
+    {
+      "easing": [
+        0.35,
+        0,
+        0.2,
+        1
+      ],
+      "perspective": 1800,
+      "pitch": 6,
+      "roll": 0,
+      "scale": 1.85,
+      "time": 1.2125,
+      "x": -21,
+      "y": 12,
+      "yaw": 32
+    },
+    {
+      "perspective": 1800,
+      "pitch": 6,
+      "roll": 0,
+      "scale": 1.85,
+      "time": 2.9000000000000004,
+      "x": -21,
+      "y": 12,
+      "yaw": 32
+    },
+    {
+      "easing": [
+        0.37,
+        0,
+        0.63,
+        1
+      ],
+      "perspective": 1800,
+      "pitch": 6,
+      "roll": 0,
+      "scale": 1.75,
+      "time": 4.35,
+      "x": -21,
+      "y": -20,
+      "yaw": 32
+    },
+    {
+      "perspective": 1800,
+      "pitch": 6,
+      "roll": 0,
+      "scale": 1.75,
+      "time": 4.75,
+      "x": -21,
+      "y": -20,
+      "yaw": 32
+    },
+    {
+      "easing": [
+        0.22,
+        1,
+        0.36,
+        1
+      ],
+      "perspective": 1800,
+      "pitch": 0,
+      "roll": 0,
+      "scale": 1,
+      "time": 6.5,
+      "x": 0,
+      "y": 0,
+      "yaw": 0
+    },
+    {
+      "perspective": 1800,
+      "pitch": 0,
+      "roll": 0,
+      "scale": 1,
+      "time": 7.5,
+      "x": 0,
+      "y": 0,
+      "yaw": 0
+    }
+  ],
+  "depthOfField": {
+    "enabled": true,
+    "focus": {
+      "x": 0.44,
+      "y": 0.42
+    },
+    "maxBlurPx": 3.5,
+    "protectRect": {
+      "height": 0.075,
+      "width": 0.36,
+      "x": 0.32,
+      "y": 0.38
+    }
+  }
+}
