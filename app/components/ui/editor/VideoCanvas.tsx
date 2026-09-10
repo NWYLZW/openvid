@@ -16,6 +16,8 @@ import { calculateSmoothZoom } from "@/lib/canvas.utils";
 import { PHOTO_MOCKUPS, VIDEO_Z_INDEX } from "@/lib/constants";
 import { cameraDepthSupportError, mapCameraDepthOfField, parseCameraDepthOfField } from "@/lib/camera-depth-of-field";
 import { reprojectDepthOfField } from "@/lib/depth-of-field";
+import { parsePointerTrack, renderPointerTrack } from "@/lib/pointer-track";
+import { disposePointerDistortion } from "@/lib/pointer-distortion";
 import { useCanvasFramePreview } from "@/hooks/useCanvasFramePreview";
 import { applyPerspective3D, disposePerspective3D } from "@/lib/perspective3d";
 import { RotationHandleIcon } from "@/components/ui/RotationHandleIcon";
@@ -340,6 +342,7 @@ function VideoCanvasInner({
     const exportCanvasRef = useRef<HTMLCanvasElement>(null);
     // Foreground canvas — used to render the mockup in isolation so that the
     // WebGL 3D perspective is applied only to the mockup, not to the background.
+    const pointerMediaRef = useRef<HTMLCanvasElement | null>(null);
     const foregroundCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const maskCompositeCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const wallpaperImageRef = useRef<HTMLImageElement | null>(null);
@@ -492,6 +495,7 @@ function VideoCanvasInner({
     useEffect(() => {
         return () => {
             disposePerspective3D();
+            disposePointerDistortion();
         };
     }, []);
 
@@ -774,6 +778,22 @@ function VideoCanvasInner({
         catch (error) { depthSupportError = error instanceof Error ? error.message : String(error); }
     }
     const depthActive = depthEnabled && !depthSupportError;
+    const pointerFragment = mockupMotionFragments.find(f => f.pointerTrack?.enabled);
+    const pointerEnabled = !!pointerFragment;
+    let pointerSupportError = pointerEnabled ? cameraDepthSupportError({
+        mediaType, mockupId, clipCount: videoClips.length,
+        cameraOnly: mockupMotionFragments.length === 1 && !!pointerFragment?.keyframes?.length && pointerFragment.presetId === 'none',
+        cropped: !!cropArea && (cropArea.x !== 0 || cropArea.y !== 0 || cropArea.width !== 100 || cropArea.height !== 100),
+        transformed: videoTransform.rotation !== 0 || videoTransform.translateX !== 0 || videoTransform.translateY !== 0,
+        zoomed: false, masked: !!videoMaskConfig?.enabled, cameraOverlay: !!cameraConfig?.enabled, phone: imagePhoneActive,
+    })?.replaceAll('Depth of field', 'Mouse animation').replaceAll('depth of field', 'mouse animation') : null;
+    let resolvedPointerTrack: ReturnType<typeof parsePointerTrack> | undefined;
+    if (pointerFragment && !pointerSupportError) {
+        try { resolvedPointerTrack = parsePointerTrack(pointerFragment.pointerTrack); }
+        catch (error) { pointerSupportError = error instanceof Error ? error.message : String(error); }
+    }
+    const pointerActive = !!resolvedPointerTrack;
+    const canvasPreviewActive = depthActive || pointerActive;
     const frameQueueRef = useRef<Promise<void>>(Promise.resolve());
 
     const hasCameraKeyframes = mockupMotionFragments.some(f => !!f.keyframes?.length);
@@ -1685,13 +1705,26 @@ function VideoCanvasInner({
         }
 
         const { containerX, containerY, containerWidth, containerHeight } = computeContainer();
+        let videoSource: HTMLVideoElement | HTMLCanvasElement = video!;
+        let videoDrawCtx = mockupDrawCtx;
+        if (resolvedPointerTrack && pointerFragment && frameTime >= pointerFragment.startTime && frameTime <= pointerFragment.endTime) {
+            const media = pointerMediaRef.current ?? (pointerMediaRef.current = document.createElement('canvas'));
+            const w = Math.max(1, Math.round(containerWidth)), h = Math.max(1, Math.round(containerHeight));
+            if (media.width !== w || media.height !== h) { media.width = w; media.height = h; }
+            const mediaCtx = media.getContext('2d', canvasCtxOptions)!;
+            mediaCtx.clearRect(0, 0, w, h);
+            mediaCtx.drawImage(video!, 0, 0, w, h);
+            renderPointerTrack(mediaCtx, resolvedPointerTrack, frameTime - pointerFragment.startTime, w, h, canvasHeight);
+            videoSource = media;
+            videoDrawCtx = { ...mockupDrawCtx, sourceWidth: w, sourceHeight: h };
+        }
 
         if (has3DEffect && fgCanvas && fgCtx) {
             fgCtx.save();
             fgCtx.translate(fgOffsetX, fgOffsetY);
             if (!imagePhoneActive) {
-                drawMockupAndMedia(fgCtx, containerX, containerY, containerWidth, containerHeight, video!, false, true,
-                    hasCameraKeyframes && mockupMotionForFrame ? { ...mockupDrawCtx, mockupMotion: { ...mockupMotionForFrame, scale: 1, translateXPct: 0, translateYPct: 0 } } : mockupDrawCtx);
+                drawMockupAndMedia(fgCtx, containerX, containerY, containerWidth, containerHeight, videoSource, false, true,
+                    hasCameraKeyframes && mockupMotionForFrame ? { ...videoDrawCtx, mockupMotion: { ...mockupMotionForFrame, scale: 1, translateXPct: 0, translateYPct: 0 } } : videoDrawCtx);
             }
             fgCtx.restore();
 
@@ -1748,7 +1781,7 @@ function VideoCanvasInner({
                     vlCtx.imageSmoothingEnabled = true;
                     vlCtx.imageSmoothingQuality = 'high';
                     if (!imagePhoneActive) {
-                        drawMockupAndMedia(vlCtx, containerX, containerY, containerWidth, containerHeight, video!, false, false, mockupDrawCtx);
+                        drawMockupAndMedia(vlCtx, containerX, containerY, containerWidth, containerHeight, videoSource, false, false, videoDrawCtx);
                     }
 
                     const vm = videoMaskConfig!;
@@ -1842,7 +1875,7 @@ function VideoCanvasInner({
                 ctx.save();
                 applyVideoZoom(ctx);
                 if (!imagePhoneActive) {
-                    drawMockupAndMedia(ctx, containerX, containerY, containerWidth, containerHeight, video!, false, false, mockupDrawCtx);
+                    drawMockupAndMedia(ctx, containerX, containerY, containerWidth, containerHeight, videoSource, false, false, videoDrawCtx);
                 }
                 ctx.restore();
 
@@ -1869,11 +1902,11 @@ function VideoCanvasInner({
         frameQueueRef.current = frame.catch(() => {});
         return frame;
     };
-    const depthPreview = useCanvasFramePreview({
-        enabled: depthActive, width: exportDimensions.width, height: exportDimensions.height,
+    const canvasFramePreview = useCanvasFramePreview({
+        enabled: canvasPreviewActive, maxFps: pointerActive ? (resolvedPointerTrack?.fps ?? 60) : 30, width: exportDimensions.width, height: exportDimensions.height,
         exportingRef: isExportingRef,
         // Compare actual pixels' inputs, not callback identity: player hooks also render while paused.
-        renderKey: JSON.stringify([depthSupportError, mockupMotionFragments, videoClips, videoDuration,
+        renderKey: JSON.stringify([depthSupportError, pointerSupportError, mockupMotionFragments, videoClips, videoDuration,
             padding, roundedCorners, shadows, videoTransform, cropArea, canvasElements, zoomFragments, zoomMovements,
             backgroundTab, backgroundColorCss, backgroundBlur, wallpaperUrl, selectedImageUrl, unsplashOverrideUrl]),
         getFrameKey: () => {
@@ -2175,16 +2208,20 @@ function VideoCanvasInner({
                                 }
                             }}
                         >
-                            {depthActive && <canvas ref={depthPreview.canvasRef} data-depth-preview
+                            {canvasPreviewActive && <canvas ref={canvasFramePreview.canvasRef} data-canvas-frame-preview
+                                data-depth-preview={depthActive ? '' : undefined} data-pointer-preview={pointerActive ? '' : undefined}
                                 className="absolute inset-0 w-full h-full" />}
-                            {depthEnabled && (depthSupportError || depthPreview.error) && <div role="status" data-depth-notice
+                            {(depthSupportError || pointerSupportError || (canvasPreviewActive && canvasFramePreview.error)) && <div role="status"
+                                data-depth-notice={depthEnabled ? '' : undefined} data-pointer-notice={pointerEnabled ? '' : undefined}
                                 className="pointer-events-none absolute bottom-2 left-2 right-2 z-50 rounded border border-border bg-background/95 px-3 py-2 text-xs text-muted-foreground">
-                                Depth of field paused: {depthSupportError || depthPreview.error}
+                                {depthSupportError && `Depth of field paused: ${depthSupportError} `}
+                                {pointerSupportError && `Mouse animation paused: ${pointerSupportError} `}
+                                {canvasPreviewActive && canvasFramePreview.error}
                             </div>}
                             {/* Zoom container - applies zoom to entire composition (background + video) */}
                             <div className="absolute inset-0"
                                 style={{
-                                    visibility: depthActive && !depthPreview.error ? 'hidden' : undefined,
+                                    visibility: canvasPreviewActive && !canvasFramePreview.error ? 'hidden' : undefined,
                                     perspective: mediaType === "image" && imageTransform && apply3DToBackground ? `${imageTransform.perspective || 600}px` : 'none',
                                     perspectiveOrigin: 'center center',
                                     // Propagate overflow:visible so the 3D phone overlay in image mode

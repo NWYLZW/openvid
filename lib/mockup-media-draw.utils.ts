@@ -56,7 +56,7 @@ export function drawMockupAndMedia(
   containerY: number,
   containerWidth: number,
   containerHeight: number,
-  source: HTMLVideoElement | HTMLImageElement,
+  source: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement,
   applyImageXform: boolean,
   is3DActive: boolean,
   ctx2: MockupDrawContext,

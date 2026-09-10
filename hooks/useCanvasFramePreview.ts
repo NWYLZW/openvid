@@ -6,6 +6,7 @@ export function useCanvasFramePreview(options: {
   enabled: boolean;
   width: number;
   height: number;
+  maxFps?: 30 | 60;
   renderKey: string;
   exportingRef?: RefObject<boolean>;
   /** null means the source is not decoded/ready for a new frame yet. */
@@ -25,7 +26,7 @@ export function useCanvasFramePreview(options: {
       const current = latest.current;
       const mediaKey = current.getFrameKey();
       const key = `${current.renderKey}:${current.width}:${current.height}:${mediaKey}`;
-      if (current.exportingRef?.current || mediaKey === null || key === presentedKey || now - last < 1000 / 30) {
+      if (current.exportingRef?.current || mediaKey === null || key === presentedKey || now - last < 1000 / (current.maxFps ?? 30) - .5) {
         raf = requestAnimationFrame(tick); return;
       }
       last = now;

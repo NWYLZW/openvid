@@ -1239,6 +1239,7 @@ export interface MockupMotionFragment extends MockupMotionConfig {
   custom?: MotionCustomOffsets;
   keyframes?: MotionKeyframe[];
   depthOfField?: import("./camera-depth-of-field").CameraDepthOfField;
+  pointerTrack?: import("./pointer-track").PointerTrack;
   /** Custom offsets for 3D presets. Only used when presetId is a 3D preset. */
   custom3D?: import("./mockup-motion-3d").Mockup3DMotionCustomOffsets;
 }
