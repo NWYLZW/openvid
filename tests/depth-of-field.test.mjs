@@ -84,3 +84,14 @@ test('disabled depth keeps editable settings through JSON persistence and remapp
   assert.equal(disabled.enabled,false);assert.deepEqual(disabled.protectRect,config.protectRect);
   assert.deepEqual(parseCameraDepthOfField(JSON.parse(JSON.stringify(disabled))),disabled);
 });
+
+test('optional zoom compensation stabilizes blur while softness widens the focus transition',()=>{
+ const box={containerX:100,containerY:50,containerWidth:1720,containerHeight:980};
+ const base=mapCameraDepthOfField(config,box,1920,1080,1.5,0,2);
+ const natural=mapCameraDepthOfField({...config,compensateZoom:true,softness:85},box,1920,1080,1.5,0,2);
+ near(natural.maxBlurPx*2,base.maxBlurPx);
+ assert.ok(natural.depthRange>base.depthRange);
+ assert.deepEqual(natural.protectedPoints,base.protectedPoints);
+ assert.throws(()=>parseCameraDepthOfField({...config,softness:101}),/depthOfField/);
+ assert.throws(()=>parseCameraDepthOfField({...config,compensateZoom:'yes'}),/depthOfField/);
+});

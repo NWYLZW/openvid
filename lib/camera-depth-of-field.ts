@@ -3,9 +3,13 @@ import type { DepthOfField } from './depth-of-field';
 /** Persisted with the camera fragment. Coordinates refer to the original video. */
 export interface CameraDepthOfField {
   enabled?: boolean;
+  /** Wider transition from the protected focus region to the far blur. */
+  softness?: number;
+  /** Compensate 2D camera/zoom magnification; perspective still affects apparent depth. */
+  compensateZoom?: boolean;
   focus: { x: number; y: number };
   protectRect?: { x: number; y: number; width: number; height: number };
-  /** Pixels at 1080 output height, before camera scale; intentionally mild. */
+  /** Radius at 1080 output height; optional zoom compensation keeps it visually mild. */
   maxBlurPx: number;
 }
 
@@ -21,17 +25,19 @@ export function parseCameraDepthOfField(value: unknown): CameraDepthOfField {
   const keys = (v: Record<string, unknown>, allowed: string[]) => {
     if (Object.keys(v).some(k => !allowed.includes(k))) throw new Error('depthOfField: unknown field');
   };
-  const v = object(value); keys(v, ['enabled', 'focus', 'protectRect', 'maxBlurPx']);
+  const v = object(value); keys(v, ['enabled', 'focus', 'protectRect', 'maxBlurPx', 'softness', 'compensateZoom']);
   if (v.enabled !== undefined && typeof v.enabled !== 'boolean') throw new Error('depthOfField: enabled must be boolean');
+  if (v.compensateZoom !== undefined && typeof v.compensateZoom !== 'boolean') throw new Error('depthOfField: compensateZoom must be boolean');
+  const extra = { ...(v.softness === undefined ? {} : {softness:number(v.softness,0,100)}), ...(v.compensateZoom === undefined ? {} : {compensateZoom:v.compensateZoom as boolean}) };
   const enabled = v.enabled === undefined ? {} : { enabled: v.enabled as boolean };
   const f = object(v.focus); keys(f, ['x', 'y']);
   const focus = { x: number(f.x, 0, 1), y: number(f.y, 0, 1) };
   const maxBlurPx = v.maxBlurPx === undefined ? 3.5 : number(v.maxBlurPx, 0, 4);
-  if (v.protectRect === undefined) return { ...enabled, focus, maxBlurPx };
+  if (v.protectRect === undefined) return { ...enabled, ...extra, focus, maxBlurPx };
   const r = object(v.protectRect); keys(r, ['x', 'y', 'width', 'height']);
   const protectRect = { x: number(r.x, 0, 1), y: number(r.y, 0, 1), width: number(r.width, .000001, 1), height: number(r.height, .000001, 1) };
   if (protectRect.x + protectRect.width > 1 || protectRect.y + protectRect.height > 1) throw new Error('depthOfField: protected rectangle exceeds source');
-  return { ...enabled, focus, protectRect, maxBlurPx };
+  return { ...enabled, ...extra, focus, protectRect, maxBlurPx };
 }
 
 /** Unsupported compositions keep their editable project and render with depth temporarily paused. */
@@ -49,7 +55,7 @@ export function cameraDepthSupportError(state: {
 /** Exact contain/bleed mapping supplied by drawFrame; roll happens before perspective. */
 export function mapCameraDepthOfField(config: CameraDepthOfField, container: {
   containerX: number; containerY: number; containerWidth: number; containerHeight: number;
-}, width: number, height: number, bleed: number, roll: number): DepthOfField {
+}, width: number, height: number, bleed: number, roll: number, magnification = 1): DepthOfField {
   const { containerX: x, containerY: y, containerWidth: w, containerHeight: h } = container;
   const cx = x + w / 2, cy = y + h / 2;
   const angle = roll * Math.PI / 180, cos = Math.cos(angle), sin = Math.sin(angle);
@@ -62,5 +68,5 @@ export function mapCameraDepthOfField(config: CameraDepthOfField, container: {
   return { focus: map(config.focus), protectedPoints: r ? [
     map({x:r.x,y:r.y}), map({x:r.x+r.width,y:r.y}),
     map({x:r.x,y:r.y+r.height}), map({x:r.x+r.width,y:r.y+r.height}),
-  ] : [], maxBlurPx: config.maxBlurPx / bleed, depthRange: .35 / bleed, sharpBand: .025 / bleed };
+  ] : [], maxBlurPx: config.maxBlurPx / bleed / (config.compensateZoom ? Math.max(.01, magnification) : 1), depthRange: .35 * (.5 + (config.softness ?? 50) / 100) / bleed, sharpBand: .025 / bleed };
 }

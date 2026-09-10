@@ -1730,7 +1730,7 @@ function VideoCanvasInner({
 
             const depth = depthConfig ? mapCameraDepthOfField(depthConfig,
                 { containerX, containerY, containerWidth, containerHeight }, canvasWidth, canvasHeight,
-                BLEED_FACTOR, mockupMotionForFrame?.rotateZ ?? 0) : undefined;
+                BLEED_FACTOR, mockupMotionForFrame?.rotateZ ?? 0, (mockupMotionForFrame?.scale ?? 1) * zoomState.scale) : undefined;
             const cameraPitch = mockupMotionForFrame?.rotateX ?? 0;
             const cameraYaw = mockupMotionForFrame?.rotateY ?? 0;
             const cameraPerspective = (mockupMotionForFrame?.perspectivePx || 900) / BLEED_FACTOR;

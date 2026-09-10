@@ -53,3 +53,5 @@ camera关键帧可附加 easing=[x1,y1,x2,y2]，四个控制值限定0–1，绑
 可选 `pointerTrack` 跟随camera片段保存在同一工程；顶层配方用于首次创建，后续 `updateMotion(id,{pointerTrack},expected)` 增量修改，null移除。UI入口 Mouse，时间线 Mouse 行显示移动/点击事件；支持全局效果与单次点击覆盖。字段 enabled/size/effect/radius/strength/duration/fps/events；坐标x/y为原始素材0..1，time是camera片段局部秒，travel为到达事件前的移动时长。效果 none/press/ripple/halo/distort，单次effect省略继承默认。fps可选30/60，开启鼠标默认60，导出读取同一参数。
 
 使用无光标素材；不能把旧版已烘焙光标视频再叠一层。鼠标/点击不再由FFmpeg预合成：Openvid按每个预览/导出时刻采样，先局部形变视频，再画光标，最后共同应用镜头变换。背景不参与点击形变。源码与点击记录仍需归档；设计轨迹不能描述为真实系统鼠标采样。
+
+景深可选 `softness:0..100`（省略50）调整清晰区向远端模糊的过渡，`compensateZoom:boolean`（省略false）补偿camera和原生Zoom的2D放大，避免模糊半径随推近过度放大。这两个参数均在景深面板可调。搜索试片采用maxBlurPx=1.8、softness=85、compensateZoom=true；仍为远端景深近似，不是完整物理镜头或自动焦点系统。Shader使用49点高斯采样减少稀疏采样重影。

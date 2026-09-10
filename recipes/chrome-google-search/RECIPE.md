@@ -1,3 +1,5 @@
+当前效果优化版使用refined-effects-edit.json：点击100%强度/20%范围/0.5秒，景深1.8及柔和过渡、缩放补偿。保持7.5秒脚本与60fps。
+
 当前鼠标效果版本使用pointer-effects-edit.json及runs/pointer-effects-2026-09-10/clean-source.mp4。Mouse面板和Mouse时间线可微调轨迹/点击，默认扭曲，60fps。此素材无预合成鼠标；下方历史版本只供参考。
 
 # Chrome / Google 搜索演示

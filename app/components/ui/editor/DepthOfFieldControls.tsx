@@ -47,6 +47,9 @@ export function DepthOfFieldControls({ fragment, onUpdate }: {
         </label>
         <input aria-label="Blur strength" className="w-full accent-primary" type="range" min={0} max={4} step={.1}
           value={depth.maxBlurPx} onChange={e => update({ maxBlurPx: e.target.valueAsNumber })} />
+        <label className="flex items-center justify-between text-xs">Focus falloff softness <output>{depth.softness ?? 50}%</output></label>
+        <input aria-label="Focus falloff softness" className="w-full accent-primary" type="range" min={0} max={100} step={1} value={depth.softness ?? 50} onChange={e=>update({softness:e.target.valueAsNumber})}/>
+        <label className="flex items-center justify-between text-xs gap-2">Keep blur size stable while zooming<input type="checkbox" checked={depth.compensateZoom ?? false} onChange={e=>update({compensateZoom:e.target.checked})}/></label>
         <div role="button" tabIndex={0} aria-label="Focus position" title="Click or drag to move focus; arrow keys move by 1%"
           className="relative aspect-video w-full cursor-crosshair touch-none overflow-hidden rounded border border-border bg-background focus-visible:outline-2 focus-visible:outline-primary"
           onPointerDown={e => {

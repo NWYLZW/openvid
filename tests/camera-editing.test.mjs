@@ -51,3 +51,11 @@ test('pointer updates preserve camera and depth settings; invalid event ranges a
  assert.throws(()=>updateCameraFragment(current,{pointerTrack:{...pointer,events:[{...pointer.events[0],time:8}]}},current),/range/);
  assert.equal(updateCameraFragment(next,{pointerTrack:null},next).pointerTrack,undefined);
 });
+
+test('transport float rounding does not look like a user edit, but meaningful changes still do',()=>{
+ const current=fixture(), expected=structuredClone(current);
+ expected.keyframes[1].time=current.keyframes[1].time+Number.EPSILON;
+ assert.doesNotThrow(()=>updateCameraFragment(current,{depthOfField:null},expected));
+ expected.keyframes[1].time+=.0001;
+ assert.throws(()=>updateCameraFragment(current,{depthOfField:null},expected),/changed since/);
+});

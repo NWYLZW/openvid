@@ -22,9 +22,9 @@ export const depthFragment = `
   vec3 sum = vec3(0.0);
   float alphaWeight = 0.0;
   if (radius.x > 0.000001) {
-    for (int y = -2; y <= 2; y++) {
-      for (int x = -2; x <= 2; x++) {
-        vec2 offset = vec2(float(x), float(y));
+    for (int y = -3; y <= 3; y++) {
+      for (int x = -3; x <= 3; x++) {
+        vec2 offset = vec2(float(x), float(y)) * (2.0 / 3.0);
         float weight = exp(-dot(offset, offset) * 0.5);
         vec4 tap = texture2D(map, clamp(vMapUv + offset * radius * 0.5, vec2(0.0), vec2(1.0)));
         sum += tap.rgb * tap.a * weight;
