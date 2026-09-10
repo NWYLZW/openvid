@@ -1,8 +1,10 @@
-# 连续镜头与鼠标编排
+# 镜头设计与历史演进
 
-当前加速版为 [fast-intro-edit.json](fast-intro-edit.json)，基于下述 [camera-edit.json](camera-edit.json) 的原始节拍。用户希望镜头、鼠标、操作共同形成连续动作，不能先点击再补一段无关镜头动画。保留原始录制画面比例，不使用模拟工具栏或设备框；默认内置 Desktop / macOS 风格壁纸 desktop-01，圆角8、三层软阴影24。
+当前版本以[RECIPE.md](RECIPE.md)为唯一入口。以下按演进保留历史设计和参数，不能将各段“当前”理解为最新状态。
 
-## 当前节拍
+早期加速版为 [fast-intro-edit.json](fast-intro-edit.json)，基于下述 [camera-edit.json](camera-edit.json) 的原始节拍。用户希望镜头、鼠标、操作共同形成连续动作，不能先点击再补一段无关镜头动画。保留原始录制画面比例，不使用模拟工具栏或设备框；默认内置 Desktop / macOS 风格壁纸 desktop-01，圆角8、三层软阴影24。
+
+## 早期连续镜头节拍
 
 - 0秒：平面斜躺，约三分之一位于画面下方之外，鼠标位于素材底部。
 - 0–2.4秒：镜头拉远、逐渐放平，同时鼠标向搜索框上滑。

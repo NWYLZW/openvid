@@ -16,11 +16,17 @@
 
 Chrome“窗口”菜单可选择实际窗口。Cmd+反引号在本次不可靠。分享提示条可能成为当前窗口；重新读取完整accessibility树后从窗口菜单切换，不重复旧索引。
 
-## 鼠标：必须区分捕获与可视化
+## 鼠标：当前默认流程
+
+记录实际点击坐标和时间后，优先使用无光标素材＋工程内pointerTrack，经Mouse面板/API编辑轨迹和点击效果，按60fps逐帧生成。参数、单次样式覆盖和工程保存见[编辑API](editing-api.md)。不要把下面的历史预合成方案当成默认；已带光标的素材不能再次叠加。
+
+源录制的事实不变：窗口录像与软件鼠标层是不同来源，必须检查原片，不以Computer Use截图有指针推断录屏也有。
+
+## 历史鼠标预合成（仅复现旧版时读取）
 
 本次原生窗口视频没有包含Computer Use的独立软件指针。即使改用坐标点击，原片也未包含那个软件指针；不能以工具截图中的指针证明录屏有鼠标。
 
-已验证补充路径：原生录制保留，使用 `automation/native-pointer-log.mjs` 记录Computer Use实际点击命令的坐标及起止时间，再用 `pnpm openvid media pointer <plan.json>` 绘制可视化指针与点击提示。它不依赖浏览器DOM，可接受其他app的Computer Use目标，但目前只实测Chrome窗口。
+历史补充路径：原生录制保留，使用 `automation/native-pointer-log.mjs` 记录Computer Use实际点击命令的坐标及起止时间，再用 `pnpm openvid media pointer <plan.json>` 绘制可视化指针与点击提示。它不依赖浏览器DOM，可接受其他app的Computer Use目标，但目前只实测Chrome窗口。
 
 这条轨道是**命令坐标驱动的展示动画**，不是测得的系统鼠标轨迹。点击时间取命令起止的中点，两个位置之间做0.4秒平滑插值；需要更高同步精度时再补真正的输入事件采样，不隐瞒当前精度。
 
@@ -56,6 +62,6 @@ await log.mark('result-ready');
 
 重新生成时若修改pointer计划的输出文件名，必须同时修改assembly计划各clip的file，使预剪消费新指针素材；只修改两个输出名会错误地复用旧输入。
 
-## 编排连续光标时再读
+## 历史CLI连续光标预合成（非当前默认）
 
 `media pointer` 的 events 支持 `kind: "move"` 或 `"click"`，坐标为素材百分比，time 是输入视频秒；可选 travel 为抵达该点前的移动时长（默认0.4秒，最长不越过上一事件）。移动用余弦缓动，只有click产生点击提示。以初始move定义入口位置，再用move定义弧线途经点和停留，最后click。先预剪无光标原片，再在剪辑时间轴上编排光标，最后经Openvid整张平面统一透视；避免预剪把长轨迹剪断或重复叠加已烘焙光标。展示轨迹不是OS轨迹，点击时刻仍须对应真实操作。
