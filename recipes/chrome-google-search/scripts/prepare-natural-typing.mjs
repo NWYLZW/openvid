@@ -1,0 +1,20 @@
+import {readFile,writeFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+const run=resolve(process.argv[2]);
+const read=async name=>JSON.parse(await readFile(resolve(run,name),'utf8'));
+const marks=await read('marks.json');const timing=await read('typed-source.mp4.timeline.json');
+const project=(await read('before-project.json')).project;
+const edit=JSON.parse(await readFile(new URL('../human-pauses-edit.json',import.meta.url),'utf8'));
+const prior=project.mockupMotionFragments.find(f=>f.keyframes?.length);
+const geometry=await read('capture-geometry.json');
+const x=v=>(v*geometry.width-geometry.cropLeft)/(geometry.width-geometry.cropLeft); // Original capture to retained video plane.
+const input={x:x(marks.inputPoint.x),y:marks.inputPoint.y};const submit={x:x(marks.searchPoint.x),y:marks.searchPoint.y};
+const first=1.20,moveStart=6.30,moveEnd=6.90,click=7.00;
+const pose=(time,values={})=>({time,scale:1,x:0,y:0,pitch:0,yaw:0,roll:0,perspective:1800,...values});
+const close={scale:1.85,x:-21,y:12,pitch:6,yaw:32};const down={scale:1.75,x:-21,y:-45,pitch:6,yaw:32};
+edit.camera=[pose(0,{scale:1.12,y:30,pitch:48}),pose(.55,{scale:.95,pitch:10,easing:[.3,0,.45,1]}),pose(1.08,{...close,easing:[.35,0,.2,1]}),pose(moveStart,close),pose(moveEnd,{...down,easing:[.37,0,.63,1]}),pose(click+.4,down),pose(8.85,{easing:[.22,1,.36,1]}),pose(timing.measuredDuration)];
+edit.depthOfField={...prior.depthOfField,focus:input,protectRect:{x:.30,y:.37,width:.38,height:.085}};
+edit.pointerTrack={...prior.pointerTrack,events:[{id:'entry',kind:'move',time:0,x:.51,y:.98},{id:'input-arrive',kind:'move',time:1.08,travel:1.08,...input},{id:'input-focus',kind:'click',time:first,...input},{id:'search-arrive',kind:'move',time:moveEnd,travel:.6,...submit},{id:'search-submit',kind:'click',time:click,...submit}]};
+edit.speed=1;edit.padding=project.padding;edit.roundedCorners=project.roundedCorners;edit.shadows=project.shadows;
+await writeFile(resolve(run,'edit.json'),JSON.stringify(edit,null,2)+'\n');
+console.log({duration:timing.measuredDuration,input,submit,moveStart,moveEnd,click,actualKeyboardStart:marks.typing.started,actualKeyboardEnd:marks.typing.completed});

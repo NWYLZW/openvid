@@ -1,13 +1,13 @@
 # Chrome / Google 搜索演示
 
-当前：自然停顿版，约7.9秒、1080p60fps。输入框点击后短暂停顿，再输入；点击搜索后让水波展开，镜头稍后拉远，结果页结束。不继续滚动、图片或文章浏览。
+当前：真实逐字输入版，约9.7秒、1080p60fps。34字符原速逐字输入约4.6秒；输入后稍停，鼠标与镜头0.6秒到搜索按钮，点击后等0.4秒再拉远，结果页结束。
 
 ## 本次入口
 
-- 当前参数：[human-pauses-edit.json](human-pauses-edit.json)。
-- 恢复工作先读 `runs/human-pauses-2026-09-10/run.md`，核对真实工程和产物。
-- 源素材为该运行的paused-source.mp4；源画面等待由assembly生成，光标/水波/镜头仍在工程内渲染。
-- 调整等待时长：修改运行副本assembly.json，media assemble后运行[scripts/prepare-human-pauses.mjs](scripts/prepare-human-pauses.mjs)，依据before-project快照同步时间。不要冻结包含光标和效果的成片。
+- 当前参数：[natural-typing-edit.json](natural-typing-edit.json)。
+- 恢复工作先读 `runs/natural-typing-final-2026-09-10/run.md`，核对真实工程和产物。
+- 源素材为该运行typed-source.mp4，来自Openvid Record真实键盘输入；去除左侧工具指针所在空白边，光标/水波/镜头在工程内渲染。
+- 重新录制时先读[scripts/type-humanly.mjs](scripts/type-humanly.mjs)，按真实时间和几何更新assembly；media assemble后用[scripts/prepare-natural-typing.mjs](scripts/prepare-natural-typing.mjs)生成工程参数。旧自然停顿版human-pauses-edit.json保留对比。
 
 ## 共同编辑要求
 
