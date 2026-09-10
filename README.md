@@ -210,3 +210,7 @@ The current recipe uses Openvid **Record → Share screen → Window**, with Com
 Computer Use's software cursor was absent from the captured window, so `automation/native-pointer-log.mjs` logs actual command coordinates and `pnpm openvid media pointer <plan.json>` adds an explicitly synthetic pointer visualization before retiming. This is not an OS cursor trajectory. Local recording now allows 300 seconds; other apps/multi-window synchronization still need their own verification.
 
 Run `node --experimental-strip-types --test tests/*.test.mjs` for edit, source-boundary, pointer, and archival protection regression tests (Node 22+, ffmpeg/ffprobe required).
+
+### Camera-directed revision
+
+The current [camera recipe](recipes/chrome-google-search/camera.md) uses no simulated toolbar: the original plane starts laid back, rises before the pointer appears, moves into a side-angle search close-up, then returns to a stable frontal view. Optional camera keyframes in the local editing API reuse the Motion pipeline; preview/export transform order and trim/split remapping are regression-tested. Intermediate media can retain a 2560-pixel width via the pointer CLI.
