@@ -754,6 +754,7 @@ function VideoCanvasInner({
     const hasMask = Object.keys(maskStyles).length > 0;
     const hasMockup = mockupId && mockupId !== "none";
 
+    const hasCameraKeyframes = mockupMotionFragments.some(f => !!f.keyframes?.length);
     const hasMockup2DMotion = mediaType === "video" && !imagePhoneActive && mockupMotionFragments.length > 0;
 
     const mockupMotionPreview = useMemo<MockupMotionTransform>(
@@ -1663,7 +1664,8 @@ function VideoCanvasInner({
             fgCtx.save();
             fgCtx.translate(fgOffsetX, fgOffsetY);
             if (!imagePhoneActive) {
-                drawMockupAndMedia(fgCtx, containerX, containerY, containerWidth, containerHeight, video!, false, true, mockupDrawCtx);
+                drawMockupAndMedia(fgCtx, containerX, containerY, containerWidth, containerHeight, video!, false, true,
+                    hasCameraKeyframes && mockupMotionForFrame ? { ...mockupDrawCtx, mockupMotion: { ...mockupMotionForFrame, scale: 1, translateXPct: 0, translateYPct: 0 } } : mockupDrawCtx);
             }
             fgCtx.restore();
 
@@ -1672,7 +1674,14 @@ function VideoCanvasInner({
 
             ctx.save();
             applyVideoZoom(ctx);
-            ctx.drawImage(fgCanvas, -fgOffsetX, -fgOffsetY, fgWidth, fgHeight);
+            if (hasCameraKeyframes && mockupMotionForFrame) {
+                const centerX = canvasWidth / 2, centerY = canvasHeight / 2;
+                ctx.translate(centerX + containerWidth * mockupMotionForFrame.translateXPct / 100, centerY + containerHeight * mockupMotionForFrame.translateYPct / 100);
+                ctx.scale(mockupMotionForFrame.scale, mockupMotionForFrame.scale);
+                ctx.drawImage(fgCanvas, -fgWidth / 2, -fgHeight / 2, fgWidth, fgHeight);
+            } else {
+                ctx.drawImage(fgCanvas, -fgOffsetX, -fgOffsetY, fgWidth, fgHeight);
+            }
             ctx.restore();
             if (imagePhoneActive && imagePhoneCanvasRef.current) {
                 drawPhone3DCompositeWithZoom(ctx, canvasWidth, canvasHeight, frameTime, zoomState, highQuality, pivotX, pivotY, phone3dCtx);
@@ -2285,6 +2294,8 @@ function VideoCanvasInner({
                                                     className="relative"
                                                     style={{
                                                         pointerEvents: imagePhoneActive ? 'none' : 'auto',
+                                                        transform: hasCameraKeyframes ? `translate(${mockupMotionPreview.translateXPct}%, ${mockupMotionPreview.translateYPct}%) scale(${mockupMotionPreview.scale})` : undefined,
+                                                        transformOrigin: 'center center',
                                                         ...(mockupBoxSize
                                                             ? { width: `${mockupBoxSize.width}px`, height: `${mockupBoxSize.height}px` }
                                                             : { width: '100%', height: '100%' }),
@@ -2298,7 +2309,7 @@ function VideoCanvasInner({
                                                         style={
                                                             hasMockup2DMotion
                                                                 ? {
-                                                                    transform: buildMockupMotionCss(mockupMotionPreview),
+                                                                    transform: buildMockupMotionCss(hasCameraKeyframes ? { ...mockupMotionPreview, scale: 1, translateXPct: 0, translateYPct: 0 } : mockupMotionPreview),
                                                                     transformStyle: "preserve-3d",
                                                                     transformOrigin: "center center",
                                                                     opacity: mockupMotionPreview.opacity,

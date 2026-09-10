@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "speed": 1.03,
+  "padding": 8,
+  "roundedCorners": 2,
+  "shadows": 16,
+  "mockup": "none",
+  "background": {
+    "from": "#071b27",
+    "to": "#164e4d"
+  },
+  "zooms": [],
+  "titles": [],
+  "camera": [
+    {
+      "time": 0,
+      "scale": 1,
+      "x": 0,
+      "y": 12,
+      "pitch": 62,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800
+    },
+    {
+      "time": 0.7,
+      "scale": 1,
+      "x": 0,
+      "y": 12,
+      "pitch": 62,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800
+    },
+    {
+      "time": 4.2,
+      "scale": 1,
+      "x": 0,
+      "y": 0,
+      "pitch": 0,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800
+    },
+    {
+      "time": 5,
+      "scale": 1,
+      "x": 0,
+      "y": 0,
+      "pitch": 0,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800
+    },
+    {
+      "time": 6.7,
+      "scale": 2.05,
+      "x": -24,
+      "y": 14,
+      "pitch": 6,
+      "yaw": 34,
+      "roll": 0,
+      "perspective": 1800
+    },
+    {
+      "time": 7.5,
+      "scale": 2.05,
+      "x": -24,
+      "y": 14,
+      "pitch": 6,
+      "yaw": 34,
+      "roll": 0,
+      "perspective": 1800
+    },
+    {
+      "time": 8.85,
+      "scale": 1.85,
+      "x": -24,
+      "y": -20,
+      "pitch": 6,
+      "yaw": 34,
+      "roll": 0,
+      "perspective": 1800
+    },
+    {
+      "time": 9.25,
+      "scale": 1.85,
+      "x": -24,
+      "y": -20,
+      "pitch": 6,
+      "yaw": 34,
+      "roll": 0,
+      "perspective": 1800
+    },
+    {
+      "time": 11,
+      "scale": 1,
+      "x": 0,
+      "y": 0,
+      "pitch": 0,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800
+    },
+    {
+      "time": 30.7,
+      "scale": 1,
+      "x": 0,
+      "y": 0,
+      "pitch": 0,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800
+    }
+  ]
+}

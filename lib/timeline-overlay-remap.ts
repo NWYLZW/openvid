@@ -1,3 +1,4 @@
+import { remapCameraFragment } from "./remap-camera";
 import type { VideoTrackClip } from "@/types/video-track.types";
 import type { ZoomFragment, ZoomMovement } from "@/types/zoom.types";
 import type { AudioTrack } from "@/types/audio.types";
@@ -106,7 +107,8 @@ export function remapOverlaysAfterClipChange(input: RemapOverlaysInput): RemapOv
 
     // Skip all work when nothing relevant changed (pure selection updates etc.)
     const layoutChanged = ranges.some(r => r.newStart !== r.oldStart || r.newEnd !== r.oldEnd)
-        || newClips.length !== oldClips.length;
+        || newClips.length !== oldClips.length
+        || (input.motionFragments.some(f => f.keyframes?.length) && newClips.some(n => { const old = oldClips.find(c => c.id === n.id); return old && (old.trimStart !== n.trimStart || old.trimEnd !== n.trimEnd); }));
     if (!layoutChanged) {
         return {
             zoomFragments: input.zoomFragments,
@@ -163,6 +165,10 @@ export function remapOverlaysAfterClipChange(input: RemapOverlaysInput): RemapOv
 
     const motionFragments: MockupMotionFragment[] = [];
     for (const fragment of input.motionFragments) {
+        if (fragment.keyframes?.length) {
+            motionFragments.push(...remapCameraFragment(fragment, oldClips, newClips));
+            continue;
+        }
         const mapped = mapInterval(fragment.startTime, fragment.endTime, ranges);
         if (!mapped) continue;
         motionFragments.push({ ...fragment, startTime: mapped.start, endTime: mapped.end });

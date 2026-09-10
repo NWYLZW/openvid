@@ -2790,6 +2790,10 @@ export default function Editor() {
             setBackgroundTab("color");
             setSelectedWallpaper(0);
             setBackgroundColorConfig({ type: "gradient", config: { type: "linear", direction: "to-br", stops: [{ color: edit.background.from, position: 0 }, { color: edit.background.to, position: 100 }] } });
+            setMockupMotionFragments(edit.camera?.length ? [{
+                id: "recipe-camera", presetId: "none", intensity: 50, speed: 50,
+                startTime: 0, endTime: videoDuration, keyframes: edit.camera,
+            }] : []);
             setZoomMovements([]);
             setZoomFragments(edit.zooms.map((z, i) => ({
                 id: `recipe-zoom-${i}`, startTime: z.start, endTime: z.end,

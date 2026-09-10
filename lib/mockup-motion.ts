@@ -1,3 +1,4 @@
+import { activeMotionFragments, sampleMotionKeyframes, type MotionKeyframe } from "./motion-keyframes";
 import { getDefault3DFragmentDuration, type Mockup3DMotionPresetId } from "./mockup-motion-3d";
 
 export type MockupMotionPresetId =
@@ -1236,6 +1237,7 @@ export interface MockupMotionFragment extends MockupMotionConfig {
   startTime: number;
   endTime: number;
   custom?: MotionCustomOffsets;
+  keyframes?: MotionKeyframe[];
   /** Custom offsets for 3D presets. Only used when presetId is a 3D preset. */
   custom3D?: import("./mockup-motion-3d").Mockup3DMotionCustomOffsets;
 }
@@ -1275,6 +1277,7 @@ export function sampleFragmentMotion(
   }
 
   const localTime = currentTime - fragment.startTime;
+  if (fragment.keyframes?.length) return { ...REST_MOCKUP_MOTION, ...sampleMotionKeyframes(fragment.keyframes, localTime) };
   const localDuration = fragment.endTime - fragment.startTime;
 
   // 3D presets produce CSS-compatible values by mapping the 3D transform
@@ -1298,9 +1301,7 @@ export function sampleCombinedMockupMotion(
   fragments: MockupMotionFragment[],
   currentTime: number
 ): MockupMotionTransform {
-  const active = fragments.filter(
-    (f) => currentTime >= f.startTime && currentTime <= f.endTime
-  );
+  const active = activeMotionFragments(fragments, currentTime);
 
   if (active.length === 0) return REST_MOCKUP_MOTION;
 

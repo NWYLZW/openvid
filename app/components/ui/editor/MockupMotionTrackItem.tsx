@@ -35,7 +35,7 @@ export function MockupMotionTrackItem({
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState<"start" | "end" | null>(null);
 
-  const label = t(`presets.${fragment.presetId}`);
+  const label = fragment.keyframes?.length ? "Camera keyframes" : t(`presets.${fragment.presetId}`);
 
   const is3D = MOTION_PRESET_3D_IDS.has(fragment.presetId);
 

@@ -21,3 +21,5 @@ apply 仅覆盖本次已需要的字段，没有任意 React 状态注入。不�
 素材替换：先通过界面 Upload 将文件放入库，再 `await sources()` 读取带id的库元信息，`await replaceSource(id)` 替换当前视频。复用现有上传处理器；准备失败会拒绝并保留旧clip映射，成功须等待新clip和媒体就绪才返回。替换会重建视频轨与默认缩放；随后重新apply本次配置。不要拿它作为追加素材命令。
 
 `await downloadSource()`现按工程唯一sourceId从素材库读取实际Blob，返回sourceId和文件信息；多来源工程明确拒绝，避免下载到另一段源。调用方必须await，并检查真实下载文件。
+
+可选 `camera`：以源视频秒计的关键帧数组，字段 time/scale/x/y/pitch/yaw/roll/perspective。首帧time=0、时间严格递增；不能同时使用zooms。位置百分比，角度为度。复用Motion轨道采样与渲染，界面显示Camera keyframes；配置入口在recipe/API。参考 [镜头配方](../../../../recipes/chrome-google-search/camera.md)。未提供camera时清除旧camera Motion片段。

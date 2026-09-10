@@ -1,6 +1,8 @@
+import type { MotionKeyframe } from "./motion-keyframes";
 /** Small recipe format for the editing operations proven by the first real run. */
 export interface LocalEdit {
   version: 1;
+  camera?: MotionKeyframe[];
   speed: number;
   padding: number;
   roundedCorners: number;
@@ -27,7 +29,7 @@ export function parseLocalEdit(input: unknown, duration: number): LocalEdit {
     if ((value.end as number) <= (value.start as number)) throw new Error('end must follow start');
   }
   object(input);
-  const allowed = ['version','speed','padding','roundedCorners','shadows','mockup','background','zooms','titles'];
+  const allowed = ['version','camera','speed','padding','roundedCorners','shadows','mockup','background','zooms','titles'];
   if (Object.keys(input).some(key => !allowed.includes(key))) throw new Error('Unknown edit field');
   if (input.version !== 1) throw new Error('Unsupported edit version');
   number(input.speed, .25, 4, 'speed');
@@ -50,6 +52,22 @@ export function parseLocalEdit(input: unknown, duration: number): LocalEdit {
     object(title); interval(title); color(title.color);
     if (typeof title.text !== 'string' || !title.text.trim() || title.text.length > 300) throw new Error('Invalid title text');
     number(title.y, 0, 100, 'title y'); number(title.fontSize, 8, 150, 'fontSize');
+  }
+  if (input.camera !== undefined) {
+    if (!Array.isArray(input.camera) || input.camera.length < 2 || input.camera.length > 100) throw new Error('Expected 2..100 camera keyframes');
+    let previous = -1;
+    for (const frame of input.camera) {
+      object(frame);
+      number(frame.time, 0, duration, 'camera time');
+      if ((frame.time as number) <= previous) throw new Error('Camera times must strictly increase');
+      previous = frame.time as number;
+      number(frame.scale, .2, 4, 'camera scale');
+      number(frame.x, -100, 100, 'camera x'); number(frame.y, -100, 100, 'camera y');
+      number(frame.pitch, -80, 80, 'pitch'); number(frame.yaw, -65, 65, 'yaw');
+      number(frame.roll, -45, 45, 'roll'); number(frame.perspective, 1200, 4000, 'perspective');
+    }
+    if (input.camera[0].time !== 0) throw new Error('First camera keyframe must start at zero');
+    if (input.zooms.length) throw new Error('Use camera keyframes or zoom fragments, not both');
   }
   return input as unknown as LocalEdit;
 }
