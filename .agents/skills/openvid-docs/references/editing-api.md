@@ -55,3 +55,5 @@ camera关键帧可附加 easing=[x1,y1,x2,y2]，四个控制值限定0–1，绑
 使用无光标素材；不能把旧版已烘焙光标视频再叠一层。鼠标/点击不再由FFmpeg预合成：Openvid按每个预览/导出时刻采样，先局部形变视频，再画光标，最后共同应用镜头变换。背景不参与点击形变。源码与点击记录仍需归档；设计轨迹不能描述为真实系统鼠标采样。
 
 景深可选 `softness:0..100`（省略50）调整清晰区向远端模糊的过渡，`compensateZoom:boolean`（省略false）补偿camera和原生Zoom的2D放大，避免模糊半径随推近过度放大。这两个参数均在景深面板可调。搜索试片采用maxBlurPx=1.8、softness=85、compensateZoom=true；仍为远端景深近似，不是完整物理镜头或自动焦点系统。Shader使用49点高斯采样减少稀疏采样重影。
+
+新增 `water`（UI: Water ripple）点击样式：以点击为圆心向外传播一圈有正负折射的波峰，中心恢复清晰，外圈逐渐衰减。与只画圆环的`ripple`、整体按压的`distort`分别保留。复用radius/strength/duration与单次effect覆盖；当前水波试片duration=.65、radius=.2、strength=1。先作用视频像素，再画光标与透视。波峰有防中心奇点衰减，并对单波最大强度验证无径向折返。

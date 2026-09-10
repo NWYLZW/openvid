@@ -1,6 +1,6 @@
 import { applyPointerDistortion } from './pointer-distortion.ts';
 
-export const CLICK_EFFECTS = ['none', 'press', 'ripple', 'halo', 'distort'] as const;
+export const CLICK_EFFECTS = ['none', 'press', 'ripple', 'halo', 'distort', 'water'] as const;
 export type ClickEffect = typeof CLICK_EFFECTS[number];
 export type PointerEffect = ClickEffect;
 export interface PointerEvent {
@@ -74,7 +74,7 @@ export function parsePointerTrack(value: unknown, duration?: number): PointerTra
   }
   const distortTimes: number[] = [];
   for (const event of track.events) {
-    if (event.kind !== 'click' || (event.effect ?? track.effect) !== 'distort') continue;
+    if (event.kind !== 'click' || !['distort','water'].includes(event.effect ?? track.effect)) continue;
     while (distortTimes.length && distortTimes[0] + track.duration <= event.time) distortTimes.shift();
     distortTimes.push(event.time);
     if (distortTimes.length > 32) throw new Error('pointerTrack: at most 32 simultaneous distort clicks');
@@ -118,16 +118,23 @@ export function pointerWarpPoint(x: number, y: number, cx: number, cy: number, r
 export function renderPointerTrack(ctx: CanvasRenderingContext2D, track: PointerTrack, time: number, width: number, height: number, referenceHeight = height): void {
   const sample = samplePointerTrack(track, time);
   if (!sample.position) return;
-  const distortions = sample.clicks.filter(c => c.effect === 'distort' && Math.abs(c.pressure) > 1e-6);
+  const distortions = sample.clicks.filter(c => (c.effect === 'distort' && Math.abs(c.pressure) > 1e-6) || (c.effect === 'water' && c.progress > 0 && c.progress < 1));
   if (distortions.length && track.radius > 0 && track.strength > 0) {
-    applyPointerDistortion(ctx.canvas, distortions.map(c => ({ x: c.x * width, y: c.y * height, radius: track.radius * width, amplitude: .35 * track.strength * c.pressure })));
+    applyPointerDistortion(ctx.canvas, distortions.map(c => ({ x: c.x * width, y: c.y * height, radius: track.radius * width, amplitude: c.effect === 'water' ? .045 * track.strength : .35 * track.strength * c.pressure, ...(c.effect === 'water' ? {waveProgress:c.progress} : {}) })));
   }
   const size = track.size * referenceHeight / 1080;
   ctx.save();
   for (const click of sample.clicks) {
     const radius = track.radius * width;
     if (radius <= 0 || track.strength <= 0) continue;
-    if (click.effect === 'ripple') {
+    if (click.effect === 'water') {
+      const r = radius * (.05 + .9 * click.progress);
+      const fade = Math.sin(Math.PI * click.progress) * (1-click.progress) * track.strength;
+      ctx.beginPath(); ctx.arc(click.x * width, click.y * height, r, 0, Math.PI*2);
+      ctx.strokeStyle = `rgba(20,35,48,${fade*.12})`; ctx.lineWidth=Math.max(.6,size*.04); ctx.stroke();
+      ctx.beginPath(); ctx.arc(click.x * width, click.y * height, r + Math.max(.8,size*.04), 0, Math.PI*2);
+      ctx.strokeStyle = `rgba(255,255,255,${fade*.25})`;ctx.stroke();
+    } else if (click.effect === 'ripple') {
       ctx.beginPath(); ctx.arc(click.x * width, click.y * height, radius * (.15 + .85 * click.progress), 0, Math.PI * 2);
       ctx.strokeStyle = `rgba(80,160,255,${(1 - click.progress) * track.strength * .7})`;
       ctx.lineWidth = Math.max(1, size * .08); ctx.stroke();

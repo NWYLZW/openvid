@@ -2,7 +2,7 @@
 import type { MockupMotionFragment } from '@/lib/mockup-motion';
 import type { PointerTrack, PointerEvent, PointerEffect } from '@/lib/pointer-track';
 
-const effects: [PointerEffect,string][]=[['none','None'],['press','Soft press'],['ripple','Ripple'],['halo','Halo'],['distort','Elastic distortion']];
+const effects: [PointerEffect,string][]=[['none','None'],['press','Soft press'],['ripple','Ripple'],['halo','Halo'],['distort','Elastic distortion'],['water','Water ripple']];
 export const defaultPointerTrack = ():PointerTrack=>({enabled:true,size:28,effect:'press',radius:.12,strength:.45,duration:.36,fps:60,events:[{id:crypto.randomUUID(),time:0,x:.5,y:.8,kind:'move',travel:.4}]});
 function NumberInput({label,value,min,max,step=.01,onCommit}:{label:string;value:number;min:number;max:number;step?:number;onCommit:(value:number)=>void}) {
  return <label className="flex items-center justify-between gap-2 text-xs">{label}<input key={`${label}:${value}`} aria-label={label} type="number" min={min} max={max} step={step} defaultValue={Number(value.toFixed(4))} className="w-24 rounded border border-border bg-background p-2" onKeyDown={e=>{if(e.key==='Enter')e.currentTarget.blur();if(e.key==='Escape'){e.currentTarget.value=String(value);e.currentTarget.blur();}}} onBlur={e=>{const n=Number(e.target.value);if(e.target.value!==''&&Number.isFinite(n)&&n>=min&&n<=max)onCommit(n);else e.target.value=String(value);}}/></label>;

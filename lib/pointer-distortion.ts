@@ -1,5 +1,5 @@
 /** A small image-space GPU pass: video pixels warp before pointer artwork is painted. */
-export interface PointerDistortion { x: number; y: number; radius: number; amplitude: number }
+export interface PointerDistortion { x: number; y: number; radius: number; amplitude: number; waveProgress?: number }
 let resources: { canvas: HTMLCanvasElement; gl: WebGL2RenderingContext; program: WebGLProgram; texture: WebGLTexture; vao: WebGLVertexArrayObject } | undefined;
 
 function ensureResources() {
@@ -22,7 +22,7 @@ function ensureResources() {
     precision highp float;
     in vec2 uv; out vec4 color;
     uniform sampler2D source; uniform vec2 resolution;
-    uniform int count; uniform vec4 presses[32];
+    uniform int count; uniform vec4 presses[32]; uniform vec2 waves[32];
     void main() {
       vec2 p = vec2(uv.x, 1.0 - uv.y) * resolution;
       vec2 delta = vec2(0.0); float total = 0.0;
@@ -31,7 +31,18 @@ function ensureResources() {
         vec2 offset = p - presses[i].xy;
         float r2 = dot(offset, offset) / (presses[i].z * presses[i].z);
         float weight = r2 < 1.0 ? (1.0 - r2) * (1.0 - r2) : 0.0;
-        delta += offset * presses[i].w * weight;
+        if (waves[i].y > 0.5) {
+          float progress = waves[i].x;
+          float r = sqrt(r2);
+          float front = 0.05 + 0.9 * progress;
+          float phase = (r - front) / 0.14;
+          float envelope = smoothstep(0.0, 0.08, progress) * pow(1.0 - progress, 1.3);
+          float packet = exp(-phase * phase * 1.5) * sin(phase * 3.14159265);
+          float edge = 1.0 - smoothstep(0.88, 1.0, r);
+          delta += offset / max(length(offset), 0.001) * presses[i].z * presses[i].w * packet * envelope * edge * smoothstep(0.0, 0.08, r);
+        } else {
+          delta += offset * presses[i].w * weight;
+        }
         if (r2 < 1.0) total += abs(presses[i].w);
       }
       p += delta * min(1.0, .35 / max(.35, total));
@@ -66,6 +77,7 @@ export function applyPointerDistortion(target: HTMLCanvasElement, presses: Point
   gl.uniform2f(gl.getUniformLocation(program, 'resolution'), canvas.width, canvas.height);
   gl.uniform1i(gl.getUniformLocation(program, 'count'), presses.length);
   gl.uniform4fv(gl.getUniformLocation(program, 'presses[0]'), new Float32Array(presses.flatMap(p => [p.x, p.y, p.radius, p.amplitude])));
+  gl.uniform2fv(gl.getUniformLocation(program, 'waves[0]'), new Float32Array(presses.flatMap(p => [p.waveProgress ?? 0, p.waveProgress === undefined ? 0 : 1])));
   gl.drawArrays(gl.TRIANGLES, 0, 3);
   const ctx = target.getContext('2d')!;
   // Keep every pixel outside the affected circles in the original 2D surface.
@@ -78,4 +90,12 @@ export function disposePointerDistortion(): void {
   const { gl, program, texture, vao } = resources;
   gl.deleteProgram(program); gl.deleteTexture(texture); gl.deleteVertexArray(vao);
   resources = undefined;
+}
+
+/** Unit-radius water packet; the crest travels outwards and leaves the center at rest. */
+export function waterRippleOffset(radiusFraction: number, progress: number): number {
+  if(progress<=0||progress>=1||radiusFraction<=0||radiusFraction>=1)return 0;
+  const smooth=(a:number,b:number,v:number)=>{const t=Math.max(0,Math.min(1,(v-a)/(b-a)));return t*t*(3-2*t);};
+  const phase=(radiusFraction-(.05+.9*progress))/.14;
+  return Math.exp(-phase*phase*1.5)*Math.sin(phase*Math.PI)*smooth(0,.08,progress)*Math.pow(1-progress,1.3)*(1-smooth(.88,1,radiusFraction))*smooth(0,.08,radiusFraction);
 }
