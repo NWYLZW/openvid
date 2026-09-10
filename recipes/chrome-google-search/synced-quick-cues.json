@@ -1,0 +1,4 @@
+{
+  "intro": { "sourceEnd": 6, "speed": 4 },
+  "submit": { "sourceStart": 7.4, "sourceArrival": 8.85, "cameraEasing": [0.37, 0, 0.63, 1] }
+}

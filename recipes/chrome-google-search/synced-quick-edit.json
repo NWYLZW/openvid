@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "speed": 1,
+  "padding": 8,
+  "roundedCorners": 8,
+  "shadows": 24,
+  "mockup": "none",
+  "background": {
+    "wallpaper": "desktop-01"
+  },
+  "zooms": [],
+  "titles": [],
+  "camera": [
+    {
+      "scale": 1.12,
+      "x": 0,
+      "y": 30,
+      "pitch": 48,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800,
+      "time": 0.0
+    },
+    {
+      "scale": 0.95,
+      "x": 0,
+      "y": 0,
+      "pitch": 10,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800,
+      "time": 0.6,
+      "easing": [
+        0.3,
+        0,
+        0.45,
+        1
+      ]
+    },
+    {
+      "scale": 1.85,
+      "x": -21,
+      "y": 12,
+      "pitch": 6,
+      "yaw": 32,
+      "roll": 0,
+      "perspective": 1800,
+      "time": 1.2125,
+      "easing": [
+        0.35,
+        0,
+        0.2,
+        1
+      ]
+    },
+    {
+      "scale": 1.85,
+      "x": -21,
+      "y": 12,
+      "pitch": 6,
+      "yaw": 32,
+      "roll": 0,
+      "perspective": 1800,
+      "time": 2.9000000000000004
+    },
+    {
+      "scale": 1.75,
+      "x": -21,
+      "y": -20,
+      "pitch": 6,
+      "yaw": 32,
+      "roll": 0,
+      "perspective": 1800,
+      "time": 4.35,
+      "easing": [
+        0.37,
+        0,
+        0.63,
+        1
+      ]
+    },
+    {
+      "scale": 1.75,
+      "x": -21,
+      "y": -20,
+      "pitch": 6,
+      "yaw": 32,
+      "roll": 0,
+      "perspective": 1800,
+      "time": 4.75
+    },
+    {
+      "scale": 1,
+      "x": 0,
+      "y": 0,
+      "pitch": 0,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800,
+      "time": 6.5,
+      "easing": [
+        0.22,
+        1,
+        0.36,
+        1
+      ]
+    },
+    {
+      "scale": 1,
+      "x": 0,
+      "y": 0,
+      "pitch": 0,
+      "yaw": 0,
+      "roll": 0,
+      "perspective": 1800,
+      "time": 26.2
+    }
+  ]
+}
