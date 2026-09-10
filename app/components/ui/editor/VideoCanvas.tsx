@@ -14,6 +14,8 @@ import { MockupWrapper } from "./mockups/MockupWrapper";
 import { DEFAULT_MOCKUP_CONFIG, type ImageDeviceId } from "@/types/mockup.types";
 import { calculateSmoothZoom } from "@/lib/canvas.utils";
 import { PHOTO_MOCKUPS, VIDEO_Z_INDEX } from "@/lib/constants";
+import { cameraDepthSupportError, mapCameraDepthOfField, parseCameraDepthOfField } from "@/lib/camera-depth-of-field";
+import { useCanvasFramePreview } from "@/hooks/useCanvasFramePreview";
 import { applyPerspective3D, disposePerspective3D } from "@/lib/perspective3d";
 import { RotationHandleIcon } from "@/components/ui/RotationHandleIcon";
 import { CanvasElementsLayer, ElementResizeStart } from "./CanvasElementsLayer";
@@ -117,6 +119,7 @@ function VideoCanvasInner({
     onSelectZoomMovement,
     onUpdateZoomMovement,
     videoClips = [],
+    isExportingRef,
 }: VideoCanvasProps & {
     ref?: React.Ref<VideoCanvasHandle>;
     onSelectedElementIdsChange?: (ids: string[]) => void;
@@ -754,6 +757,18 @@ function VideoCanvasInner({
     const hasMask = Object.keys(maskStyles).length > 0;
     const hasMockup = mockupId && mockupId !== "none";
 
+    const depthFragment = mockupMotionFragments.find(f => f.depthOfField !== undefined);
+    const depthEnabled = !!depthFragment;
+    const depthSupportError = depthEnabled ? cameraDepthSupportError({
+        mediaType, mockupId, clipCount: videoClips.length,
+        cameraOnly: mockupMotionFragments.length === 1 && !!depthFragment?.keyframes?.length && depthFragment.presetId === 'none',
+        cropped: !!cropArea && (cropArea.x !== 0 || cropArea.y !== 0 || cropArea.width !== 100 || cropArea.height !== 100),
+        transformed: videoTransform.rotation !== 0 || videoTransform.translateX !== 0 || videoTransform.translateY !== 0,
+        zoomed: zoomFragments.length > 0 || zoomMovements.length > 0,
+        masked: !!videoMaskConfig?.enabled, cameraOverlay: !!cameraConfig?.enabled, phone: imagePhoneActive,
+    }) : null;
+    const frameQueueRef = useRef<Promise<void>>(Promise.resolve());
+
     const hasCameraKeyframes = mockupMotionFragments.some(f => !!f.keyframes?.length);
     const hasMockup2DMotion = mediaType === "video" && !imagePhoneActive && mockupMotionFragments.length > 0;
 
@@ -1333,8 +1348,10 @@ function VideoCanvasInner({
     };
 
     // Function to draw a frame on the export canvas
-    const drawFrame = async (highQuality: boolean = true, explicitTimelineTime?: number) => {
-        const canvas = exportCanvasRef.current;
+    const drawFrameCore = async (highQuality: boolean = true, explicitTimelineTime?: number, targetCanvas?: HTMLCanvasElement) => {
+        if (depthSupportError) throw new Error(depthSupportError);
+        const depthConfig = depthFragment ? parseCameraDepthOfField(depthFragment.depthOfField) : undefined;
+        const canvas = targetCanvas ?? exportCanvasRef.current;
         const canvasCtxOptions: CanvasRenderingContext2DSettings = { alpha: true, colorSpace: 'srgb', desynchronized: false, willReadFrequently: false };
         const ctx = canvas?.getContext('2d', canvasCtxOptions);
         const video = videoRef.current;
@@ -1361,6 +1378,8 @@ function VideoCanvasInner({
         const scaledShadowBlur = shadows * (canvasLongSide / 896) * 0.8;
 
         const frameTime = mediaType === "video" ? (explicitTimelineTime ?? (video ? video.currentTime : 0)) : 0;
+
+        canvas.dataset.frameTime = String(frameTime);
 
         const visibleElementsAtFrame = mediaType === "video"
             ? filterVisibleElements(canvasElements, frameTime, videoDuration)
@@ -1669,8 +1688,12 @@ function VideoCanvasInner({
             }
             fgCtx.restore();
 
-            applyPerspective3D(fgCanvas, mockupMotionForFrame?.rotateX ?? 0, mockupMotionForFrame?.rotateY ?? 0, (mockupMotionForFrame?.perspectivePx || 900) / BLEED_FACTOR);
-            applyPerspective3D(fgCanvas, zoomState.rotateX, zoomState.rotateY, zoomState.perspective / BLEED_FACTOR);
+            const depth = depthConfig ? mapCameraDepthOfField(depthConfig,
+                { containerX, containerY, containerWidth, containerHeight }, canvasWidth, canvasHeight,
+                BLEED_FACTOR, mockupMotionForFrame?.rotateZ ?? 0) : undefined;
+            applyPerspective3D(fgCanvas, mockupMotionForFrame?.rotateX ?? 0, mockupMotionForFrame?.rotateY ?? 0, (mockupMotionForFrame?.perspectivePx || 900) / BLEED_FACTOR, depth);
+            // Depth mode rejects zoom fragments, so it has exactly one projection/blur pass.
+            if (!depthConfig) applyPerspective3D(fgCanvas, zoomState.rotateX, zoomState.rotateY, zoomState.perspective / BLEED_FACTOR);
 
             ctx.save();
             applyVideoZoom(ctx);
@@ -1826,6 +1849,32 @@ function VideoCanvasInner({
         }
     };
 
+    // Serialize preview/export access to the foreground canvas and singleton WebGL renderer.
+    const drawFrame = (highQuality: boolean = true, time?: number, target?: HTMLCanvasElement) => {
+        const frame = frameQueueRef.current.then(() => drawFrameCore(highQuality, time, target));
+        frameQueueRef.current = frame.catch(() => {});
+        return frame;
+    };
+    const depthPreview = useCanvasFramePreview({
+        enabled: depthEnabled, width: exportDimensions.width, height: exportDimensions.height,
+        exportingRef: isExportingRef,
+        getFrameKey: () => {
+            const video = videoRef.current;
+            if (!video || video.readyState < 2 || video.seeking) return null;
+            return [video.currentSrc, video.currentTime, video.videoWidth, video.videoHeight,
+                wallpaperImageRef.current?.src, customImageRef.current?.src,
+                elementImagesRef.current.size, svgImageCacheRef.current.size, document.fonts.status].join('|');
+        },
+        render: async (target) => {
+            const video = videoRef.current;
+            if (!video || video.readyState < 2 || video.seeking) return false;
+            const clip = videoClips[0];
+            const time = clip ? clip.startTime + video.currentTime - clip.trimStart : currentTime;
+            await drawFrame(true, time, target);
+            return true;
+        },
+    });
+
     const [activeVideoElement, setActiveVideoElement] = useState<HTMLVideoElement | null>(null);
     useEffect(() => {
         setActiveVideoElement(mediaType === "video" ? videoRef.current : null);
@@ -1833,7 +1882,7 @@ function VideoCanvasInner({
 
     useImperativeHandle(ref, () => ({
         getExportCanvas: () => exportCanvasRef.current,
-        drawFrame,
+        drawFrame: (quality, time) => drawFrame(quality, time),
         getPreviewContainer: () => previewContainerRef.current,
         clearAllSelection: () => {
             const prev = { multiIds: [...canvasSelectedIds], videoSelected: isVideoSelected };
@@ -2108,9 +2157,16 @@ function VideoCanvasInner({
                                 }
                             }}
                         >
+                            {depthEnabled && <canvas ref={depthPreview.canvasRef} data-depth-preview
+                                className="absolute inset-0 w-full h-full" />}
+                            {depthEnabled && (depthSupportError || depthPreview.error) && <div role="alert"
+                                className="absolute inset-0 z-50 flex items-center justify-center bg-background p-6 text-destructive">
+                                {depthSupportError || depthPreview.error}
+                            </div>}
                             {/* Zoom container - applies zoom to entire composition (background + video) */}
                             <div className="absolute inset-0"
                                 style={{
+                                    visibility: depthEnabled ? 'hidden' : undefined,
                                     perspective: mediaType === "image" && imageTransform && apply3DToBackground ? `${imageTransform.perspective || 600}px` : 'none',
                                     perspectiveOrigin: 'center center',
                                     // Propagate overflow:visible so the 3D phone overlay in image mode

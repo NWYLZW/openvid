@@ -1,4 +1,9 @@
 import * as THREE from "three";
+import { depthFragment, planeDepth, type DepthOfField } from "./depth-of-field";
+const dofUniforms = {
+  dofFocusZ: { value: 0 }, dofSharpBand: { value: .04 },
+  dofDepthRange: { value: .6 }, dofRadiusUv: { value: new THREE.Vector2() },
+};
 
 let _renderer: THREE.WebGLRenderer | null = null;
 let _scene: THREE.Scene | null = null;
@@ -6,6 +11,7 @@ let _camera: THREE.PerspectiveCamera | null = null;
 let _plane: THREE.Mesh | null = null;
 let _material: THREE.MeshBasicMaterial | null = null;
 let _texture: THREE.Texture | null = null;
+let _dofMaterial: THREE.MeshBasicMaterial | null = null;
 let _lastAspect = 0;
 
 function buildRenderer(): THREE.WebGLRenderer {
@@ -55,6 +61,18 @@ function ensureScene(aspect: number, renderer: THREE.WebGLRenderer): { scene: TH
       blendDst: THREE.OneMinusSrcAlphaFactor
     });
     _material.premultipliedAlpha = false;
+
+  }
+
+  if (!_dofMaterial) {
+    _dofMaterial = _material.clone();
+    _dofMaterial.onBeforeCompile = (shader) => {
+      Object.assign(shader.uniforms, dofUniforms);
+      shader.vertexShader = 'varying float dofPlaneZ;\n' + shader.vertexShader;
+      shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\ndofPlaneZ = (modelMatrix * vec4(position, 1.0)).z;');
+      shader.fragmentShader = 'varying float dofPlaneZ; uniform float dofFocusZ; uniform float dofSharpBand; uniform float dofDepthRange; uniform vec2 dofRadiusUv;\n' + shader.fragmentShader;
+      shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', depthFragment);
+    };
   }
 
   if (!_plane || Math.abs(_lastAspect - aspect) > 0.0001) {
@@ -75,7 +93,8 @@ export function applyPerspective3D(
   canvas: HTMLCanvasElement,
   rotateXDeg: number,
   rotateYDeg: number,
-  perspectivePx: number
+  perspectivePx: number,
+  depthOfField?: DepthOfField
 ): void {
   if (rotateXDeg === 0 && rotateYDeg === 0) return;
   if (typeof window === "undefined") return;
@@ -117,6 +136,13 @@ export function applyPerspective3D(
   plane.rotation.y = (rotateYDeg * Math.PI) / 180;
   plane.rotation.z = 0;
 
+  plane.material = depthOfField ? _dofMaterial! : _material!;
+  dofUniforms.dofFocusZ.value = depthOfField ? Math.min(...[depthOfField.focus, ...(depthOfField.protectedPoints ?? [])]
+    .map(p => planeDepth(p.x, p.y, aspect, rotateXDeg, rotateYDeg))) : 0;
+  dofUniforms.dofSharpBand.value = depthOfField?.sharpBand ?? .04;
+  dofUniforms.dofDepthRange.value = Math.max(.001, depthOfField?.depthRange ?? .6);
+  const radius = depthOfField ? Math.max(0, depthOfField.maxBlurPx ?? 16) * h / 1080 : 0;
+  dofUniforms.dofRadiusUv.value.set(radius / w, radius / h);
   _renderer.render(scene, _camera);
 
   const ctx2d = canvas.getContext("2d", { alpha: true, willReadFrequently: false })!;
@@ -130,6 +156,7 @@ export function applyPerspective3D(
 export function disposePerspective3D(): void {
   _texture?.dispose();
   _material?.dispose();
+  _dofMaterial?.dispose();
   if (_plane) {
     _plane.geometry.dispose();
   }
@@ -139,6 +166,7 @@ export function disposePerspective3D(): void {
   _camera = null;
   _plane = null;
   _material = null;
+  _dofMaterial = null;
   _texture = null;
   _lastAspect = 0;
 }

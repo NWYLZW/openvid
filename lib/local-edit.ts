@@ -1,8 +1,10 @@
+import { parseCameraDepthOfField, type CameraDepthOfField } from "./camera-depth-of-field.ts";
 import type { MotionKeyframe } from "./motion-keyframes";
 /** Small recipe format for the editing operations proven by the first real run. */
 export interface LocalEdit {
   version: 1;
   camera?: MotionKeyframe[];
+  depthOfField?: CameraDepthOfField;
   speed: number;
   padding: number;
   roundedCorners: number;
@@ -29,7 +31,7 @@ export function parseLocalEdit(input: unknown, duration: number): LocalEdit {
     if ((value.end as number) <= (value.start as number)) throw new Error('end must follow start');
   }
   object(input);
-  const allowed = ['version','camera','speed','padding','roundedCorners','shadows','mockup','background','zooms','titles'];
+  const allowed = ['version','camera','depthOfField','speed','padding','roundedCorners','shadows','mockup','background','zooms','titles'];
   if (Object.keys(input).some(key => !allowed.includes(key))) throw new Error('Unknown edit field');
   if (input.version !== 1) throw new Error('Unsupported edit version');
   number(input.speed, .25, 4, 'speed');
@@ -76,6 +78,10 @@ export function parseLocalEdit(input: unknown, duration: number): LocalEdit {
     }
     if (input.camera[0].time !== 0) throw new Error('First camera keyframe must start at zero');
     if (input.zooms.length) throw new Error('Use camera keyframes or zoom fragments, not both');
+  }
+  if (input.depthOfField !== undefined) {
+    if (input.mockup !== 'none' || !input.camera || input.zooms.length) throw new Error('depthOfField requires mockup none and camera keyframes without zooms');
+    return { ...input, depthOfField: parseCameraDepthOfField(input.depthOfField) } as unknown as LocalEdit;
   }
   return input as unknown as LocalEdit;
 }

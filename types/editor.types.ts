@@ -126,5 +126,6 @@ export interface VideoCanvasProps {
   onUpdateZoomMovement?: (id: string, updates: Partial<ZoomMovement>) => void;
   onSelectZoomFragment?: (id: string | null) => void;
   videoClips?: VideoTrackClip[];
+  isExportingRef?: React.RefObject<boolean>;
   cameraClipUrls?: Map<string, string> | null;
 }

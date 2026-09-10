@@ -27,3 +27,13 @@ apply 仅覆盖本次已需要的字段，没有任意 React 状态注入。不�
 camera关键帧可附加 easing=[x1,y1,x2,y2]，四个控制值限定0–1，绑定到达该帧的区间；未提供沿用默认S曲线。裁剪保留整条曲线的原始knots及easing，不重新启动缓动。原始视频的圆角和软阴影在预览/导出按相同画布长边单位缩放。
 
 背景可使用 `background: {wallpaper: "desktop-01"}`，名称由内置目录校验并解析，未知壁纸在修改工程前拒绝。已有 `{from: "#112233", to: "#445566"}` 渐变配置仍兼容。
+
+可选 `depthOfField`（仅 none + 单视频 + 单条 camera 关键帧）：
+
+```json
+{"focus":{"x":0.44,"y":0.42},"protectRect":{"x":0.32,"y":0.38,"width":0.36,"height":0.075},"maxBlurPx":3.5}
+```
+
+坐标为原始素材的 **0–1** 归一化值，区别于 camera 的0–100位置百分比。`protectRect` 可省略；矩形内与焦点保持清晰，只有更远深度渐进虚化。maxBlurPx 为1080高画布、camera scale之前的半径，范围0–4，默认3.5。按实际 contain、roll、BLEED 映射，支持 auto 比例；不支持 crop、非零 videoTransform、zoom、mask、camera overlay、3D phone 或多clip组合，API及绘制入口都会拒绝，预览显示错误。默认零变换合法。
+
+配置存入 camera motion fragment，沿现有工程保存/刷新/undo和trim remap保留。普通配方不提供depthOfField即清除旧景深。启用时预览复用导出绘制函数，CSS视频层只隐藏视觉而保持挂载；导出暂停预览，并串行访问WebGL。暂停且帧/配置未变化时不重绘。当前只支持静态保护区；不含动态鼠标跟焦。

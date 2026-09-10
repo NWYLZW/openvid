@@ -2776,6 +2776,10 @@ export default function Editor() {
         }),
         apply: (input) => {
             const edit = parseLocalEdit(input, videoDuration);
+            if (edit.depthOfField && (isPhotoMode || videoClips.length !== 1 || imagePhoneActive || cameraConfig?.enabled || videoMaskConfig?.enabled ||
+                videoTransform.rotation !== 0 || videoTransform.translateX !== 0 || videoTransform.translateY !== 0)) {
+                throw new Error('depthOfField requires a single video with no phone, camera overlay, mask or video transform.');
+            }
             const wallpaper = 'wallpaper' in edit.background ? (() => {
                 const name = edit.background.wallpaper;
                 const item = WALLPAPER_CATEGORIES.flatMap(category => category.items).find(item => item.filename === name);
@@ -2808,6 +2812,7 @@ export default function Editor() {
             setMockupMotionFragments(edit.camera?.length ? [{
                 id: "recipe-camera", presetId: "none", intensity: 50, speed: 50,
                 startTime: 0, endTime: videoDuration, keyframes: edit.camera,
+                ...(edit.depthOfField ? { depthOfField: edit.depthOfField } : {}),
             }] : []);
             setZoomMovements([]);
             setZoomFragments(edit.zooms.map((z, i) => ({
@@ -3160,6 +3165,7 @@ export default function Editor() {
                         onImageZoomScaleChange={setImageZoomScale}
                         otherSelectionActive={otherSelectionActive}
                         mockupMotionFragments={mockupMotionFragments}
+                        isExportingRef={isExportingRef}
                         videoDuration={videoDuration}
                         onMockupConfigChange={handleMockupConfigChange}
                         selectedZoomFragment={selectedZoomFragment}
