@@ -22,7 +22,7 @@ apply 仅覆盖本次已需要的字段，没有任意 React 状态注入。不�
 
 `await downloadSource()`现按工程唯一sourceId从素材库读取实际Blob，返回sourceId和文件信息；多来源工程明确拒绝，避免下载到另一段源。调用方必须await，并检查真实下载文件。
 
-可选 `camera`：以源视频秒计的关键帧数组，字段 time/scale/x/y/pitch/yaw/roll/perspective。首帧time=0、时间严格递增；不能同时使用zooms。位置百分比，角度为度。复用Motion轨道采样与渲染，界面显示Camera keyframes；配置入口在recipe/API。参考 [镜头配方](../../../../recipes/chrome-google-search/camera.md)。未提供camera时清除旧camera Motion片段。
+可选 `camera`：以源视频秒计的关键帧数组，字段 time/scale/x/y/pitch/yaw/roll/perspective。首帧time=0、时间严格递增；可以叠加原生zooms。位置百分比，角度为度。复用Motion轨道采样与渲染，界面显示Camera keyframes；配置入口在recipe/API。参考 [镜头配方](../../../../recipes/chrome-google-search/camera.md)。未提供camera时清除旧camera Motion片段。
 
 camera关键帧可附加 easing=[x1,y1,x2,y2]，四个控制值限定0–1，绑定到达该帧的区间；未提供沿用默认S曲线。裁剪保留整条曲线的原始knots及easing，不重新启动缓动。原始视频的圆角和软阴影在预览/导出按相同画布长边单位缩放。
 
@@ -37,3 +37,13 @@ camera关键帧可附加 easing=[x1,y1,x2,y2]，四个控制值限定0–1，绑
 坐标为原始素材的 **0–1** 归一化值，区别于 camera 的0–100位置百分比。`protectRect` 可省略；矩形内与焦点保持清晰，只有更远深度渐进虚化。maxBlurPx 为1080高画布、camera scale之前的半径，范围0–4，默认3.5。按实际 contain、roll、BLEED 映射，支持 auto 比例；不支持 crop、非零 videoTransform、zoom、mask、camera overlay、3D phone 或多clip组合，API及绘制入口都会拒绝，预览显示错误。默认零变换合法。
 
 配置存入 camera motion fragment，沿现有工程保存/刷新/undo和trim remap保留。普通配方不提供depthOfField即清除旧景深。启用时预览复用导出绘制函数，CSS视频层只隐藏视觉而保持挂载；导出暂停预览，并串行访问WebGL。暂停且帧/配置未变化时不重绘。当前只支持静态保护区；不含动态鼠标跟焦。
+
+## 人与 AI 共同微调同一工程
+
+已有工程的后续调整先读取 `state().project`，优先 `updateMotion(id, changes, expectedFragment)`。changes 只允许 keyframes/depthOfField；expectedFragment 必须是刚从同一工程读取的完整片段。若人已修改该片段，接口拒绝旧快照，重新读取后再合并意图，不自动重试覆盖。其他片段、背景、Zoom、文字和素材保持不变。depthOfField:null 只移除该片段景深；UI 开关可以保留配置并停用。
+
+`apply(edit)`仍用于首次创建/明确整体替换，不是通用“继续编辑”命令。不能用旧配方覆盖人工微调。真实执行参考 `automation/update-motion.mjs`，通过当前受支持的 CDP capability 调用同一浏览器工程。
+
+选择 Motion → Edit camera，或点时间线 Camera keyframes，可看到每个关键帧的时间、位置、缩放、3D角度、透视与缓动。选择关键帧会定位预览。数值框按 Enter 或离开输入框提交，拖动位置/倾斜控件实时更新。可在播放头处添加关键帧，移除关键帧或整条运动；原有预设继续使用原面板。
+
+景深 `enabled` 省略/true 启用，false 暂停效果并保留参数。Camera keyframes 与原生 Zoom/3D Effect 可在同一工程共存，API 与界面均支持；景深使用最外层倾斜平面的深度，不是角度相加。crop、非零视频变换、mask、摄像头叠层、phone、多 clip 等暂不支持的组合只暂停景深并给局部提示，保持其他编辑和导出可用。

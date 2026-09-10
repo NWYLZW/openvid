@@ -1,12 +1,15 @@
 "use client";
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { MOCKUP_MOTION_PRESETS, type MockupMotionPresetId, type MockupMotionMode, MockupMotionFragment, getMotionPresetMode } from "@/lib/mockup-motion";
+import { MOCKUP_MOTION_PRESETS, findValidMotionPlacement, DEFAULT_MOCKUP_MOTION_CONFIG, type MockupMotionPresetId, type MockupMotionMode, MockupMotionFragment, getMotionPresetMode } from "@/lib/mockup-motion";
 import { MotionPresetIcon, MotionPresetIconStyles } from "../../../../components/ui/MotionPresetIcon";
 import { Toggle } from "@/components/ui/toggle";
 
 interface MotionGlobalConfigProps {
   fragments: MockupMotionFragment[];
+  currentTime?: number;
+  videoDuration?: number;
+  onSelectFragment?: (id: string) => void;
   onAddOrReplacePreset: (presetId: MockupMotionPresetId) => void;
   hasMockup2D: boolean;
   hasMockup3D?: boolean;
@@ -17,6 +20,7 @@ interface MotionGlobalConfigProps {
 const CATEGORY_ORDER = ["Entrance", "Continue", "Exit"] as const;
 
 export function MotionGlobalConfig({
+  fragments, onSelectFragment, currentTime=0, videoDuration=0,
   onAddOrReplacePreset,
   hasMockup2D,
   hasMockup3D = false,
@@ -58,6 +62,7 @@ export function MotionGlobalConfig({
     );
   }
 
+  const canAddCamera = !!findValidMotionPlacement("none", DEFAULT_MOCKUP_MOTION_CONFIG.speed, currentTime, fragments, videoDuration);
   const presetsForMode = MOCKUP_MOTION_PRESETS.filter((p) => p.mode === activeMode);
 
   return (
@@ -78,6 +83,12 @@ export function MotionGlobalConfig({
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar -mx-1 px-1">
         <div className="flex flex-col gap-6">
+          {activeMode === '2d' && <section className="space-y-2">
+            <h3 className="text-xs font-medium">Camera keyframes</h3>
+            {fragments.filter(f=>f.keyframes?.length).map(f=><button key={f.id} className="w-full rounded border border-orange-400/50 p-3 text-left text-xs" onClick={()=>onSelectFragment?.(f.id)}>Edit camera · {f.keyframes!.length} keyframes · {f.startTime.toFixed(1)}–{f.endTime.toFixed(1)}s</button>)}
+            <button disabled={!canAddCamera} className="w-full rounded border border-border p-3 text-xs disabled:opacity-40" onClick={()=>onAddOrReplacePreset('none')}>Add camera keyframes</button>
+            {!canAddCamera && <p className="text-xs text-muted-foreground">No free motion range. Edit an existing camera or shorten a motion clip first.</p>}
+          </section>}
           {CATEGORY_ORDER.map((category) => {
             const presets = presetsForMode.filter((p) => p.category === category);
             if (presets.length === 0) return null;

@@ -1,5 +1,7 @@
 "use client";
 
+import { CameraKeyframeEditor } from "./CameraKeyframeEditor";
+import { DepthOfFieldControls } from "./DepthOfFieldControls";
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { SliderControl } from "../../../../components/ui/SliderControl";
@@ -26,6 +28,8 @@ interface MotionFragmentEditorProps {
   onUpdate: (updates: Partial<MockupMotionFragment>) => void;
   onDelete: () => void;
   onClose: () => void;
+  onSeek?: (time: number) => void;
+  currentTime?: number;
 }
 
 export function MotionFragmentEditor({
@@ -33,6 +37,7 @@ export function MotionFragmentEditor({
   onUpdate,
   onDelete,
   onClose,
+  onSeek, currentTime,
 }: MotionFragmentEditorProps) {
   const t = useTranslations("motionMenu");
 
@@ -76,6 +81,8 @@ export function MotionFragmentEditor({
       onUpdate({ custom: { ...DEFAULT_MOTION_CUSTOM_OFFSETS } });
     }
   };
+
+  if (fragment.keyframes?.length) return <CameraKeyframeEditor fragment={fragment} onUpdate={onUpdate} onDelete={onDelete} onClose={onClose} onSeek={onSeek} currentTime={currentTime}><DepthOfFieldControls fragment={fragment} onUpdate={onUpdate}/></CameraKeyframeEditor>;
 
   return (
     <div className="flex flex-col h-full text-foreground">

@@ -39,6 +39,7 @@ interface ExtendedControlPanelProps extends ControlPanelProps {
 
 export function ControlPanel({
     activeTool,
+    onSeek, currentTime,
     backgroundTab,
     selectedWallpaper,
     backgroundBlur,
@@ -333,6 +334,7 @@ export function ControlPanel({
                                 return (
                                     <Suspense key={is3DFragment ? "3d" : "2d"} fallback={<MotionFragmentEditorSkeleton />}>
                                         <EditorComponent
+                                            {...(!is3DFragment ? {onSeek, currentTime} : {})}
                                             fragment={selectedMockupMotionFragment}
                                             isGlobalMotionEnabled={isGlobalMotionEnabled}
                                             onUpdate={(updates) =>
@@ -354,6 +356,9 @@ export function ControlPanel({
                             <Suspense fallback={<MotionGlobalConfigSkeleton />}>
                                 <MotionGlobalConfig
                                     fragments={mockupMotionFragments}
+                                    onSelectFragment={onSelectMockupMotionFragment}
+                                    currentTime={currentTime}
+                                    videoDuration={videoDuration}
                                     onAddOrReplacePreset={(presetId) => onAddOrReplaceMotionPreset?.(presetId)}
                                     hasMockup2D={hasMockup2D}
                                     hasMockup3D={hasMockup3D}

@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { isLocalOnly } from '@/lib/local-mode';
+import type { MockupMotionFragment } from '@/lib/mockup-motion';
+import type { MotionKeyframe } from '@/lib/motion-keyframes';
 import type { LocalEdit } from '@/lib/local-edit';
 import type { VideoProject } from '@/lib/video-project-cache';
 import type { ExportProgress, ExportQuality, LibraryVideoInfo } from '@/types';
@@ -16,6 +18,7 @@ interface LocalAutomation {
   version: 1;
   state(): AutomationState;
   apply(edit: LocalEdit): Promise<AutomationState>;
+  updateMotion(id: string, changes: {keyframes?: MotionKeyframe[]; depthOfField?: unknown}, expected: MockupMotionFragment): Promise<AutomationState>;
   save(): Promise<void>;
   sources(): Promise<LibraryVideoInfo[]>;
   replaceSource(id: string): Promise<AutomationState>;
@@ -25,7 +28,7 @@ interface LocalAutomation {
 }
 declare global { interface Window { openvid?: LocalAutomation } }
 
-export function useLocalAutomation(handlers: Omit<LocalAutomation, 'version' | 'apply' | 'replaceSource'> & { apply(edit: LocalEdit): void; replaceSource(id: string): Promise<string> }) {
+export function useLocalAutomation(handlers: Omit<LocalAutomation, 'version' | 'apply' | 'replaceSource' | 'updateMotion'> & { updateMotion(id: string, changes: {keyframes?: MotionKeyframe[]; depthOfField?: unknown}, expected: MockupMotionFragment): void; apply(edit: LocalEdit): void; replaceSource(id: string): Promise<string> }) {
   const current = useRef(handlers);
   useEffect(() => { current.current = handlers; });
   useEffect(() => {
@@ -45,6 +48,12 @@ export function useLocalAutomation(handlers: Omit<LocalAutomation, 'version' | '
           if (performance.now() > deadline) throw new Error('Edit applied, but media did not become ready within 10 seconds');
           await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
         }
+        return api.state();
+      },
+      async updateMotion(id, changes, expected) {
+        ready();
+        current.current.updateMotion(id, structuredClone(changes), structuredClone(expected));
+        await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
         return api.state();
       },
       async save() { ready(); await current.current.save(); },

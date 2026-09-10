@@ -18,12 +18,12 @@ test('poses interpolate continuously and hold the final pose',()=>{
  assert.equal(sampleMotionKeyframes([a,b],3).scale,2);
  assert.equal(sampleMotionKeyframes([a,b],-1).rotateX,60);
 });
-test('camera configuration rejects duplicate times and conflicting zooms',()=>{
+test('camera configuration rejects duplicate times and accepts native zoom overlays',()=>{
  const e=recipe(); parseLocalEdit(e,31);
  e.camera[1].time=0;
  assert.throws(()=>parseLocalEdit(e,31),/strictly increase/);
  const other=recipe();other.zooms=[{start:1,end:2,level:1,speed:5,x:50,y:50,tiltX:0,tiltY:0}];
- assert.throws(()=>parseLocalEdit(other,31),/not both/);
+ assert.equal(parseLocalEdit(other,31).zooms.length,1);
 });
 
 test('trimming and splitting preserve camera source time rather than replaying the intro',async()=>{

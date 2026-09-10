@@ -77,10 +77,9 @@ export function parseLocalEdit(input: unknown, duration: number): LocalEdit {
       number(frame.roll, -45, 45, 'roll'); number(frame.perspective, 1200, 4000, 'perspective');
     }
     if (input.camera[0].time !== 0) throw new Error('First camera keyframe must start at zero');
-    if (input.zooms.length) throw new Error('Use camera keyframes or zoom fragments, not both');
   }
   if (input.depthOfField !== undefined) {
-    if (input.mockup !== 'none' || !input.camera || input.zooms.length) throw new Error('depthOfField requires mockup none and camera keyframes without zooms');
+    if (input.mockup !== 'none' || !input.camera) throw new Error('depthOfField requires mockup none and camera keyframes');
     return { ...input, depthOfField: parseCameraDepthOfField(input.depthOfField) } as unknown as LocalEdit;
   }
   return input as unknown as LocalEdit;

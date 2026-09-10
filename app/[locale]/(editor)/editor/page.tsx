@@ -1,4 +1,5 @@
 "use client";
+import { updateCameraFragment } from "@/lib/camera-editing";
 import { useLocalAutomation } from "@/hooks/useLocalAutomation";
 import { parseLocalEdit } from "@/lib/local-edit";
 import { WALLPAPER_CATEGORIES } from "@/lib/wallpaper.catalog";
@@ -2774,6 +2775,12 @@ export default function Editor() {
             exportProgress,
             project: buildVideoProjectSnapshot(),
         }),
+        updateMotion: (id, changes, expected) => {
+            const current = mockupMotionFragmentsRef.current.find(f => f.id === id);
+            if (!current) throw new Error("Motion fragment no longer exists");
+            const next = updateCameraFragment(current, changes, expected);
+            handleUpdateMockupMotionFragment(id, { ...next, depthOfField: next.depthOfField });
+        },
         apply: (input) => {
             const edit = parseLocalEdit(input, videoDuration);
             if (edit.depthOfField && (isPhotoMode || videoClips.length !== 1 || imagePhoneActive || cameraConfig?.enabled || videoMaskConfig?.enabled ||
@@ -2973,6 +2980,8 @@ export default function Editor() {
                                     </div>
                                 }>
                                     <ControlPanel
+                                        onSeek={handleSeek}
+                                        currentTime={currentTime}
                                         activeTool={activeTool}
                                         backgroundTab={backgroundTab}
                                         onVideoAudioToggle={handleVideoAudioToggle}

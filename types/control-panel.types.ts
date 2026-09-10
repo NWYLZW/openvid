@@ -9,6 +9,8 @@ import type { ImageProjectPreview } from "./image-project.types";
 import { MockupMotionFragment, MockupMotionPresetId } from "@/lib/mockup-motion";
 
 export interface ControlPanelProps {
+    onSeek?: (time: number) => void;
+    currentTime?: number;
     activeTool: Tool;
     backgroundTab: BackgroundTab;
     selectedWallpaper: number;

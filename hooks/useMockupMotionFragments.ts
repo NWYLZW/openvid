@@ -8,6 +8,7 @@ import {
     type MockupMotionPresetId,
     type MockupMotionMode,
 } from "@/lib/mockup-motion";
+import { commitMotionState } from "@/lib/camera-editing";
 import { Tool } from "@/types";
 
 interface UseMockupMotionFragmentsParams {
@@ -27,9 +28,12 @@ export function useMockupMotionFragments({
     selectedMockupMotionFragmentId, setSelectedMockupMotionFragmentId,
     motionMode,
 }: UseMockupMotionFragmentsParams) {
-    const [mockupMotionFragments, setMockupMotionFragments] = useState<MockupMotionFragment[]>([]);
+    const [mockupMotionFragments, setMotionState] = useState<MockupMotionFragment[]>([]);
     const mockupMotionFragmentsRef = useRef<MockupMotionFragment[]>([]);
-    useEffect(() => { mockupMotionFragmentsRef.current = mockupMotionFragments; }, [mockupMotionFragments]);
+    // Publish every UI/API/restore write synchronously before React batches its render.
+    const setMockupMotionFragments = useCallback<React.Dispatch<React.SetStateAction<MockupMotionFragment[]>>>((action) => {
+        commitMotionState(mockupMotionFragmentsRef, action, setMotionState);
+    }, []);
 
     // Prune orphan fragments when the motion mode changes (e.g. switching from
     // a 3D mockup to a 2D mockup). Fragments whose preset belongs to the other
@@ -85,6 +89,7 @@ export function useMockupMotionFragments({
             if (!placement) return;
             const newFragment: MockupMotionFragment = {
                 id: `motion_${crypto.randomUUID()}`, presetId, intensity, speed, ...placement,
+                ...(presetId === 'none' ? {keyframes: [0,placement.endTime-placement.startTime].map(time=>({time,scale:1,x:0,y:0,pitch:0,yaw:0,roll:0,perspective:1800}))} : {}),
             };
             setMockupMotionFragments((prev) => [...prev, newFragment]);
             setSelectedMockupMotionFragmentId(newFragment.id);
