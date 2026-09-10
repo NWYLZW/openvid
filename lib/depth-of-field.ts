@@ -37,3 +37,22 @@ export const depthFragment = `
   diffuseColor *= vec4(color, center.a);
 #endif
 `;
+
+/** Matches the existing THREE camera/XYZ projection, with a top-left canvas origin. */
+export function projectPerspectivePoint(point: { x: number; y: number }, aspect: number, pitch: number, yaw: number, perspectivePx: number) {
+  if (pitch === 0 && yaw === 0) return point;
+  const rx = -pitch * Math.PI / 180, ry = yaw * Math.PI / 180;
+  const x = (point.x - .5) * 2 * aspect, y = (.5 - point.y) * 2;
+  const z = planeDepth(point.x, point.y, aspect, pitch, yaw);
+  const cameraZ = 2 * perspectivePx / 1080;
+  if (cameraZ - z <= .001) throw new Error('Depth focus is behind the camera. Reduce the tilt or perspective strength.');
+  const scale = cameraZ / (cameraZ - z);
+  return { x: .5 + Math.cos(ry) * x * scale / (2 * aspect),
+    y: .5 - (Math.sin(rx) * Math.sin(ry) * x + Math.cos(rx) * y) * scale / 2 };
+}
+
+/** Keep source protection aligned when a native Zoom adds a second projection. */
+export function reprojectDepthOfField(depth: DepthOfField, aspect: number, pitch: number, yaw: number, perspectivePx: number): DepthOfField {
+  const project = (point: {x: number; y: number}) => projectPerspectivePoint(point, aspect, pitch, yaw, perspectivePx);
+  return { ...depth, focus: project(depth.focus), protectedPoints: depth.protectedPoints?.map(project) };
+}

@@ -2,6 +2,7 @@ import type { DepthOfField } from './depth-of-field';
 
 /** Persisted with the camera fragment. Coordinates refer to the original video. */
 export interface CameraDepthOfField {
+  enabled?: boolean;
   focus: { x: number; y: number };
   protectRect?: { x: number; y: number; width: number; height: number };
   /** Pixels at 1080 output height, before camera scale; intentionally mild. */
@@ -20,26 +21,28 @@ export function parseCameraDepthOfField(value: unknown): CameraDepthOfField {
   const keys = (v: Record<string, unknown>, allowed: string[]) => {
     if (Object.keys(v).some(k => !allowed.includes(k))) throw new Error('depthOfField: unknown field');
   };
-  const v = object(value); keys(v, ['focus', 'protectRect', 'maxBlurPx']);
+  const v = object(value); keys(v, ['enabled', 'focus', 'protectRect', 'maxBlurPx']);
+  if (v.enabled !== undefined && typeof v.enabled !== 'boolean') throw new Error('depthOfField: enabled must be boolean');
+  const enabled = v.enabled === undefined ? {} : { enabled: v.enabled as boolean };
   const f = object(v.focus); keys(f, ['x', 'y']);
   const focus = { x: number(f.x, 0, 1), y: number(f.y, 0, 1) };
   const maxBlurPx = v.maxBlurPx === undefined ? 3.5 : number(v.maxBlurPx, 0, 4);
-  if (v.protectRect === undefined) return { focus, maxBlurPx };
+  if (v.protectRect === undefined) return { ...enabled, focus, maxBlurPx };
   const r = object(v.protectRect); keys(r, ['x', 'y', 'width', 'height']);
   const protectRect = { x: number(r.x, 0, 1), y: number(r.y, 0, 1), width: number(r.width, .000001, 1), height: number(r.height, .000001, 1) };
   if (protectRect.x + protectRect.width > 1 || protectRect.y + protectRect.height > 1) throw new Error('depthOfField: protected rectangle exceeds source');
-  return { focus, protectRect, maxBlurPx };
+  return { ...enabled, focus, protectRect, maxBlurPx };
 }
 
-/** Fail closed both on API apply and if a later UI edit creates an unsupported composition. */
+/** Unsupported compositions keep their editable project and render with depth temporarily paused. */
 export function cameraDepthSupportError(state: {
   mediaType: string; mockupId: string; clipCount: number; cameraOnly: boolean;
   cropped: boolean; transformed: boolean; zoomed: boolean; masked: boolean; cameraOverlay: boolean; phone: boolean;
 }): string | null {
   if (state.mediaType !== 'video' || state.mockupId !== 'none' || state.clipCount !== 1 || !state.cameraOnly)
     return 'Depth of field requires one video clip, mockup none, and one camera keyframe fragment.';
-  if (state.cropped || state.transformed || state.zoomed || state.masked || state.cameraOverlay || state.phone)
-    return 'Depth of field does not support crop, video transforms, zoom fragments, masks, camera overlays or 3D phones. Remove the combination or reapply a recipe without depthOfField.';
+  if (state.cropped || state.transformed || state.masked || state.cameraOverlay || state.phone)
+    return 'Depth of field does not support crop, video transforms, masks, camera overlays or 3D phones. Adjust these settings or turn depth of field off in Motion.';
   return null;
 }
 

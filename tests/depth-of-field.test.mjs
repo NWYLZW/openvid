@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { readFileSync } from 'node:fs';
 import { parseLocalEdit } from '../lib/local-edit.ts';
-import { planeDepth } from '../lib/depth-of-field.ts';
+import { planeDepth, projectPerspectivePoint, reprojectDepthOfField } from '../lib/depth-of-field.ts';
 import { parseCameraDepthOfField, mapCameraDepthOfField, cameraDepthSupportError } from '../lib/camera-depth-of-field.ts';
 import { remapCameraFragment } from '../lib/remap-camera.ts';
 const config = { focus: {x:.44,y:.42}, protectRect:{x:.32,y:.38,width:.36,height:.075}, maxBlurPx:3.5 };
@@ -40,7 +40,7 @@ test('API normalizes mild settings, rejects malformed/unsupported requests, and 
   const e=recipe(); e.mockup='none'; e.depthOfField={...config};
   assert.deepEqual(parseLocalEdit(e,31).depthOfField,config);
   assert.equal(parseCameraDepthOfField({focus:config.focus}).maxBlurPx,3.5);
-  for(const invalid of [{...config,maxBlurPx:5},{...config,maxBlurPx:NaN},{...config,focus:{x:2,y:.5}},{...config,protectRect:{x:.9,y:0,width:.2,height:.1}},{...config,enabled:true}])
+  for(const invalid of [{...config,maxBlurPx:5},{...config,maxBlurPx:NaN},{...config,focus:{x:2,y:.5}},{...config,protectRect:{x:.9,y:0,width:.2,height:.1}},{...config,enabled:'yes'}])
     assert.throws(()=>parseLocalEdit({...e,depthOfField:invalid},31),/depthOfField/);
   assert.throws(()=>parseLocalEdit({...e,mockup:'chrome'},31),/depthOfField/);
   assert.throws(()=>parseLocalEdit({...e,camera:undefined},31),/depthOfField/);
@@ -50,7 +50,8 @@ test('API normalizes mild settings, rejects malformed/unsupported requests, and 
 test('runtime accepts default zero transforms and rejects later incompatible UI changes',()=>{
   const state={mediaType:'video',mockupId:'none',clipCount:1,cameraOnly:true,cropped:false,transformed:false,zoomed:false,masked:false,cameraOverlay:false,phone:false};
   assert.equal(cameraDepthSupportError(state),null);
-  for(const key of ['cropped','transformed','zoomed','masked','cameraOverlay','phone']) assert.ok(cameraDepthSupportError({...state,[key]:true}));
+  assert.equal(cameraDepthSupportError({...state,zoomed:true}),null);
+  for(const key of ['cropped','transformed','masked','cameraOverlay','phone']) assert.ok(cameraDepthSupportError({...state,[key]:true}));
   for(const change of [{mockupId:'chrome'},{clipCount:2},{mediaType:'image'},{cameraOnly:false}]) assert.ok(cameraDepthSupportError({...state,...change}));
 });
 test('project JSON round trip and trimmed camera remap preserve the opt-in field',()=>{
@@ -59,4 +60,27 @@ test('project JSON round trip and trimmed camera remap preserve the opt-in field
   const [mapped]=remapCameraFragment(fragment,[clip],[{...clip,trimStart:4}]);
   assert.deepEqual(mapped.depthOfField,config);
   assert.equal(mapped.keyframes[0].time,e.camera[0].time-4);
+});
+
+test('outer Zoom projection preserves focus and all protected corners using the actual THREE camera',()=>{
+  const d=mapCameraDepthOfField(config,{containerX:120,containerY:67.5,containerWidth:1680,containerHeight:945},1920,1080,1.5,15);
+  for (const pitch of [-45,0,45]) for (const yaw of [-30,0,30]) {
+    const cameraZ=2*1200/1080;
+    const camera=new THREE.PerspectiveCamera(2*Math.atan(1/cameraZ)*180/Math.PI,16/9,.001,cameraZ*20);
+    camera.position.z=cameraZ;camera.updateMatrixWorld();
+    const projected=reprojectDepthOfField(d,16/9,pitch,yaw,1200);
+    [d.focus,...d.protectedPoints].forEach((p,i)=>{
+      const expected=new THREE.Vector3((p.x-.5)*2*16/9,(.5-p.y)*2,0)
+        .applyEuler(new THREE.Euler(-pitch*Math.PI/180,yaw*Math.PI/180,0)).project(camera);
+      const actual=[projected.focus,...projected.protectedPoints][i];
+      near(actual.x,(expected.x+1)/2);near(actual.y,(1-expected.y)/2);
+    });
+    assert.equal(projected.maxBlurPx,d.maxBlurPx);
+  }
+  assert.deepEqual(projectPerspectivePoint(d.focus,16/9,0,0,1200),d.focus);
+});
+test('disabled depth keeps editable settings through JSON persistence and remapping',()=>{
+  const disabled=parseCameraDepthOfField({...config,enabled:false});
+  assert.equal(disabled.enabled,false);assert.deepEqual(disabled.protectRect,config.protectRect);
+  assert.deepEqual(parseCameraDepthOfField(JSON.parse(JSON.stringify(disabled))),disabled);
 });
