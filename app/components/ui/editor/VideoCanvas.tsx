@@ -1858,6 +1858,10 @@ function VideoCanvasInner({
     const depthPreview = useCanvasFramePreview({
         enabled: depthEnabled, width: exportDimensions.width, height: exportDimensions.height,
         exportingRef: isExportingRef,
+        // Compare actual pixels' inputs, not callback identity: player hooks also render while paused.
+        renderKey: JSON.stringify([depthSupportError, mockupMotionFragments, videoClips, videoDuration,
+            padding, roundedCorners, shadows, videoTransform, cropArea, canvasElements,
+            backgroundTab, backgroundColorCss, backgroundBlur, wallpaperUrl, selectedImageUrl, unsplashOverrideUrl]),
         getFrameKey: () => {
             const video = videoRef.current;
             if (!video || video.readyState < 2 || video.seeking) return null;

@@ -6,6 +6,7 @@ export function useCanvasFramePreview(options: {
   enabled: boolean;
   width: number;
   height: number;
+  renderKey: string;
   exportingRef?: RefObject<boolean>;
   /** null means the source is not decoded/ready for a new frame yet. */
   getFrameKey: () => string | null;
@@ -13,9 +14,8 @@ export function useCanvasFramePreview(options: {
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const latest = useRef(options);
-  const revision = useRef(0);
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => { latest.current = options; revision.current++; });
+  useEffect(() => { latest.current = options; });
   useEffect(() => {
     if (!options.enabled) return;
     const buffer = document.createElement('canvas');
@@ -24,7 +24,7 @@ export function useCanvasFramePreview(options: {
       if (cancelled) return;
       const current = latest.current;
       const mediaKey = current.getFrameKey();
-      const key = `${revision.current}:${current.width}:${current.height}:${mediaKey}`;
+      const key = `${current.renderKey}:${current.width}:${current.height}:${mediaKey}`;
       if (current.exportingRef?.current || mediaKey === null || key === presentedKey || now - last < 1000 / 30) {
         raf = requestAnimationFrame(tick); return;
       }
