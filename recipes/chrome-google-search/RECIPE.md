@@ -1,6 +1,6 @@
 # Chrome / Google 搜索演示
 
-当前制作采用[连续镜头与鼠标编排版本](camera.md)，配置为camera-edit.json。下方保留历史制作路径；不要把旧版本的Chrome外框重新加回来。
+当前制作采用[连续镜头与鼠标编排版本](camera.md)，当前加速版配置为fast-intro-edit.json；camera-edit.json保留原始节奏。下方保留历史制作路径；不要把旧版本的Chrome外框重新加回来。
 
 目标：约 25–30 秒、1920×1080、无声视频。真实展示打开 Google、输入同义搜索词（原生版用“Iceland northern lights best month”，旧CDP版用“冰岛 极光 最佳月份”）、浏览结果、查看图片和相关网页；加入变速、缩放、3D 效果和内置桌面壁纸。不能伪造搜索结果。
 
