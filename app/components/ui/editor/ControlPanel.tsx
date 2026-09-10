@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 
 import { ElementsMenuSkeleton, ZoomGlobalConfigSkeleton, MockupMenuSkeleton, WallpaperSkeleton, BackgroundColorSkeleton, ZoomFragmentEditorSkeleton, AudioMenuSkeleton, VideosMenuSkeleton, HistoryMenuSkeleton, MotionGlobalConfigSkeleton, MotionFragmentEditorSkeleton } from "../Skeleton";
 
+import { PointerTrackEditor } from "./PointerTrackEditor";
 import { ElementsMenu } from "./ElementsMenu";
 import { TooltipAction } from "@/components/ui/tooltip-action";
 import { CameraMenu } from "./CameraMenu";
@@ -39,6 +40,7 @@ interface ExtendedControlPanelProps extends ControlPanelProps {
 
 export function ControlPanel({
     activeTool,
+    onCreatePointerTrack, selectedPointerEventId, onSelectPointerEvent,
     onSeek, currentTime,
     backgroundTab,
     selectedWallpaper,
@@ -325,6 +327,11 @@ export function ControlPanel({
                         />
                     </Suspense>
                 )}
+                {activeTool === "cursor" && <PointerTrackEditor
+                    fragment={selectedMockupMotionFragment?.keyframes?.length ? selectedMockupMotionFragment : mockupMotionFragments.find(f=>f.keyframes?.length)}
+                    onUpdate={updates=>{const f=selectedMockupMotionFragment?.keyframes?.length?selectedMockupMotionFragment:mockupMotionFragments.find(f=>f.keyframes?.length);if(f)onUpdateMockupMotionFragment?.(f.id,updates);}}
+                    onCreate={()=>onCreatePointerTrack?.()} currentTime={currentTime} onSeek={onSeek}
+                    selectedId={selectedPointerEventId} onSelect={onSelectPointerEvent} thumbnail={getThumbnailForTime?.(currentTime ?? 0)?.dataUrl ?? videoThumbnail}/>}
                 {activeTool === "motion" && (
                     <>
                         {selectedMockupMotionFragment && (hasMockup2D || hasMockup3D) ? (

@@ -1,8 +1,10 @@
 import { parseCameraDepthOfField, type CameraDepthOfField } from "./camera-depth-of-field.ts";
+import { parsePointerTrack, type PointerTrack } from "./pointer-track.ts";
 import type { MotionKeyframe } from "./motion-keyframes";
 /** Small recipe format for the editing operations proven by the first real run. */
 export interface LocalEdit {
   version: 1;
+  pointerTrack?: PointerTrack;
   camera?: MotionKeyframe[];
   depthOfField?: CameraDepthOfField;
   speed: number;
@@ -31,7 +33,7 @@ export function parseLocalEdit(input: unknown, duration: number): LocalEdit {
     if ((value.end as number) <= (value.start as number)) throw new Error('end must follow start');
   }
   object(input);
-  const allowed = ['version','camera','depthOfField','speed','padding','roundedCorners','shadows','mockup','background','zooms','titles'];
+  const allowed = ['version','pointerTrack','camera','depthOfField','speed','padding','roundedCorners','shadows','mockup','background','zooms','titles'];
   if (Object.keys(input).some(key => !allowed.includes(key))) throw new Error('Unknown edit field');
   if (input.version !== 1) throw new Error('Unsupported edit version');
   number(input.speed, .25, 4, 'speed');
@@ -77,6 +79,10 @@ export function parseLocalEdit(input: unknown, duration: number): LocalEdit {
       number(frame.roll, -45, 45, 'roll'); number(frame.perspective, 1200, 4000, 'perspective');
     }
     if (input.camera[0].time !== 0) throw new Error('First camera keyframe must start at zero');
+  }
+  if (input.pointerTrack !== undefined) {
+    if(!input.camera || input.mockup!=='none') throw new Error("pointerTrack requires camera keyframes and mockup none");
+    input.pointerTrack=parsePointerTrack(input.pointerTrack,duration);
   }
   if (input.depthOfField !== undefined) {
     if (input.mockup !== 'none' || !input.camera) throw new Error('depthOfField requires mockup none and camera keyframes');

@@ -1,4 +1,5 @@
 "use client";
+import { defaultPointerTrack } from "@/app/components/ui/editor/PointerTrackEditor";
 import { updateCameraFragment } from "@/lib/camera-editing";
 import { useLocalAutomation } from "@/hooks/useLocalAutomation";
 import { parseLocalEdit } from "@/lib/local-edit";
@@ -238,6 +239,7 @@ export default function Editor() {
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [videoId, setVideoId] = useState<string | null>(null);
     const [videoDuration, setVideoDuration] = useState<number>(0);
+    const [selectedPointerEventId, setSelectedPointerEventId] = useState<string | null>(null);
     const [currentTime, setCurrentTime] = useState<number>(0);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -1065,6 +1067,7 @@ export default function Editor() {
         setIsPlaying(false);
         exportVideo({
             quality,
+            fps: mockupMotionFragmentsRef.current.find(f=>f.pointerTrack?.enabled)?.pointerTrack?.fps ?? (mockupMotionFragmentsRef.current.some(f=>f.pointerTrack?.enabled) ? 60 : undefined),
             videoBlob: videoBlob ?? undefined,
             transparentBackground: selectedWallpaper === -1,
             trim: trimRange.end > trimRange.start ? { start: trimRange.start, end: trimRange.end } : undefined,
@@ -2779,7 +2782,7 @@ export default function Editor() {
             const current = mockupMotionFragmentsRef.current.find(f => f.id === id);
             if (!current) throw new Error("Motion fragment no longer exists");
             const next = updateCameraFragment(current, changes, expected);
-            handleUpdateMockupMotionFragment(id, { ...next, depthOfField: next.depthOfField });
+            handleUpdateMockupMotionFragment(id, { ...next, depthOfField: next.depthOfField, pointerTrack: next.pointerTrack });
         },
         apply: (input) => {
             const edit = parseLocalEdit(input, videoDuration);
@@ -2820,6 +2823,7 @@ export default function Editor() {
                 id: "recipe-camera", presetId: "none", intensity: 50, speed: 50,
                 startTime: 0, endTime: videoDuration, keyframes: edit.camera,
                 ...(edit.depthOfField ? { depthOfField: edit.depthOfField } : {}),
+                ...(edit.pointerTrack ? { pointerTrack: edit.pointerTrack } : {}),
             }] : []);
             setZoomMovements([]);
             setZoomFragments(edit.zooms.map((z, i) => ({
@@ -2980,6 +2984,14 @@ export default function Editor() {
                                     </div>
                                 }>
                                     <ControlPanel
+                                        selectedPointerEventId={selectedPointerEventId}
+                                        onSelectPointerEvent={setSelectedPointerEventId}
+                                        onCreatePointerTrack={()=>{
+                                            if(!videoDuration)return;
+                                            const id=`mouse_${crypto.randomUUID()}`;
+                                            setMockupMotionFragments(prev=>[...prev,{id,presetId:'none',intensity:50,speed:50,startTime:0,endTime:videoDuration,keyframes:[0,videoDuration].map(time=>({time,scale:1,x:0,y:0,pitch:0,yaw:0,roll:0,perspective:1800})),pointerTrack:defaultPointerTrack()}]);
+                                            setSelectedMockupMotionFragmentId(id);
+                                        }}
                                         onSeek={handleSeek}
                                         currentTime={currentTime}
                                         activeTool={activeTool}
@@ -3217,6 +3229,8 @@ export default function Editor() {
 
                             <Suspense fallback={<TimelineSkeleton />}>
                                 <Timeline
+                                    selectedPointerEventId={selectedPointerEventId}
+                                    onSelectPointerEvent={(fragmentId,eventId)=>{handleSelectMockupMotionFragment(fragmentId);setSelectedPointerEventId(eventId);setActiveTool('cursor');}}
                                     videoDuration={videoDuration}
                                     currentTime={currentTime}
                                     onSeek={handleSeek}

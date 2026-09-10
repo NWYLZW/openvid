@@ -47,3 +47,9 @@ camera关键帧可附加 easing=[x1,y1,x2,y2]，四个控制值限定0–1，绑
 选择 Motion → Edit camera，或点时间线 Camera keyframes，可看到每个关键帧的时间、位置、缩放、3D角度、透视与缓动。选择关键帧会定位预览。数值框按 Enter 或离开输入框提交，拖动位置/倾斜控件实时更新。可在播放头处添加关键帧，移除关键帧或整条运动；原有预设继续使用原面板。
 
 景深 `enabled` 省略/true 启用，false 暂停效果并保留参数。Camera keyframes 与原生 Zoom/3D Effect 可在同一工程共存，API 与界面均支持；景深使用最外层倾斜平面的深度，不是角度相加。crop、非零视频变换、mask、摄像头叠层、phone、多 clip 等暂不支持的组合只暂停景深并给局部提示，保持其他编辑和导出可用。
+
+## 工程内鼠标与点击效果
+
+可选 `pointerTrack` 跟随camera片段保存在同一工程；顶层配方用于首次创建，后续 `updateMotion(id,{pointerTrack},expected)` 增量修改，null移除。UI入口 Mouse，时间线 Mouse 行显示移动/点击事件；支持全局效果与单次点击覆盖。字段 enabled/size/effect/radius/strength/duration/fps/events；坐标x/y为原始素材0..1，time是camera片段局部秒，travel为到达事件前的移动时长。效果 none/press/ripple/halo/distort，单次effect省略继承默认。fps可选30/60，开启鼠标默认60，导出读取同一参数。
+
+使用无光标素材；不能把旧版已烘焙光标视频再叠一层。鼠标/点击不再由FFmpeg预合成：Openvid按每个预览/导出时刻采样，先局部形变视频，再画光标，最后共同应用镜头变换。背景不参与点击形变。源码与点击记录仍需归档；设计轨迹不能描述为真实系统鼠标采样。

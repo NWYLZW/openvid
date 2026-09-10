@@ -53,6 +53,7 @@ export function Timeline({
     onUpdateMockupMotionFragment,
     onDeleteMockupMotionFragment,
     onActivateMotionTool,
+    onSelectPointerEvent, selectedPointerEventId,
     canvasElements = [],
     selectedElementId = null,
     onSelectElement,
@@ -199,14 +200,16 @@ export function Timeline({
     );
 
     const showMovementRow = !!selectedFragmentForMovement?.movementEnabled;
+    const showPointerRow = mockupMotionFragments.some(f=>!!f.pointerTrack);
     const totalLanesCount = useMemo(() => {
         let count = 0;
         if (showMovementRow) count += 1;
+        if (showPointerRow) count += 1;
         if (canvasElements.length > 0) count += elementLaneCount;
         if (audioTracks.length > 0) count += audioLaneCount;
         if (mockupMotionFragments.length > 0) count += 1;
         return count;
-    }, [showMovementRow, canvasElements.length, elementLaneCount, audioTracks.length, audioLaneCount, mockupMotionFragments.length]);
+    }, [showPointerRow, showMovementRow, canvasElements.length, elementLaneCount, audioTracks.length, audioLaneCount, mockupMotionFragments.length]);
 
     useEffect(() => {
         if (!isDraggingTrim) {
@@ -537,7 +540,7 @@ export function Timeline({
                 <div className="flex-1 flex flex-col relative overflow-hidden">
                     <div
                         ref={trackRef}
-                        className={`flex-1 overflow-x-auto custom-scrollbar pr-2 ${audioTracks.length > 0 || elementLaneCount > 1 || canvasElements.length > 0 || showMovementRow
+                        className={`flex-1 overflow-x-auto custom-scrollbar pr-2 ${audioTracks.length > 0 || elementLaneCount > 1 || canvasElements.length > 0 || showMovementRow || showPointerRow
                             ? "overflow-y-auto no-scrollbar"
                             : "overflow-y-hidden"
                             }`}
@@ -554,6 +557,7 @@ export function Timeline({
                                 elementLaneCount={canvasElements.length > 0 ? elementLaneCount : 0}
                                 audioLaneCount={audioTracks.length > 0 ? audioLaneCount : 0}
                                 motionTracksCount={mockupMotionFragments.length}
+                                pointerTracksCount={mockupMotionFragments.filter(f=>f.pointerTrack).length}
                                 showMovementRow={showMovementRow}
                             />
                             <div className="relative flex flex-col pb-1 min-w-0">
@@ -984,6 +988,10 @@ export function Timeline({
                                             </div>
                                         </div>
                                     )}
+
+                                    {mockupMotionFragments.some(f=>f.pointerTrack) && <div className="relative shrink-0 w-full border-y border-violet-500/20 bg-violet-500/5" style={{height:ELEMENT_ROW_HEIGHT}} aria-label="Mouse timeline">
+                                        {mockupMotionFragments.filter(f=>f.pointerTrack).flatMap(f=>f.pointerTrack!.events.filter(e=>f.startTime+e.time>=Math.max(0,f.startTime)&&f.startTime+e.time<=Math.min(validDuration,f.endTime)).map(e=><button key={`${f.id}:${e.id}`} aria-pressed={selectedPointerEventId===e.id} aria-label={`${e.kind==='click'?'Click':'Move'} event at ${(f.startTime+e.time).toFixed(2)}s`} title={`${e.kind} ${(f.startTime+e.time).toFixed(2)}s`} className={`absolute top-2 -translate-x-1/2 rounded px-1.5 py-1 text-[10px] ${e.kind==='click'?'bg-violet-600 text-white':'border border-violet-400 bg-background text-violet-600'}`} style={{left:`clamp(8px, ${(f.startTime+e.time)/validDuration*100}%, calc(100% - 8px))`,opacity:f.pointerTrack!.enabled?1:.4}} onClick={ev=>{ev.stopPropagation();onSeek(f.startTime+e.time);onSelectPointerEvent?.(f.id,e.id);}}>{e.kind==='click'?'●':'◆'}</button>))}
+                                    </div>}
 
                                     {mockupMotionFragments.length > 0 && (
                                         <div className="shrink-0 w-full flex items-center relative"

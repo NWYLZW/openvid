@@ -9,6 +9,9 @@ import type { ImageProjectPreview } from "./image-project.types";
 import { MockupMotionFragment, MockupMotionPresetId } from "@/lib/mockup-motion";
 
 export interface ControlPanelProps {
+    onCreatePointerTrack?: () => void;
+    selectedPointerEventId?: string | null;
+    onSelectPointerEvent?: (id: string | null) => void;
     onSeek?: (time: number) => void;
     currentTime?: number;
     activeTool: Tool;

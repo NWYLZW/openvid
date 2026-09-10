@@ -111,6 +111,7 @@ export function MobileToolsMenu({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
+            <ToolButton icon={<Icon icon="ph:cursor-bold" width={24}/>} label="Mouse" isActive={activeTool === "cursor"} onClick={() => handleToolChange("cursor")} />
             <ToolButton
               label={t("background")}
               isActive={activeTool === "screenshot"}

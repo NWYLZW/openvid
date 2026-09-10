@@ -6,6 +6,7 @@ import { ELEMENT_ROW_HEIGHT } from '@/types/timeline.types';
 interface LabelSidebarProps {
     audioLaneCount?: number;
     motionTracksCount?: number;
+    pointerTracksCount?: number;
     elementLaneCount?: number;
     showMovementRow?: boolean;
 }
@@ -13,6 +14,7 @@ interface LabelSidebarProps {
 export default function LabelSidebar({
     audioLaneCount = 0,
     motionTracksCount = 0,
+    pointerTracksCount = 0,
     elementLaneCount = 0,
     showMovementRow = false,
 }: LabelSidebarProps) {
@@ -70,6 +72,7 @@ export default function LabelSidebar({
                 </div>
             )}
 
+            {pointerTracksCount > 0 && <div className="flex items-center px-3 border-t border-violet-400/30" style={{height:ELEMENT_ROW_HEIGHT}}><span className="text-[9px] uppercase font-semibold text-violet-500">Mouse</span></div>}
             {motionTracksCount > 0 && (
                 <div
                     className="flex items-center px-3 border-t border-border bg-muted/40"

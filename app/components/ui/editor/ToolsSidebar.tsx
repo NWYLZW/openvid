@@ -273,6 +273,9 @@ export function ToolsSidebar({
                                 }}
                             />
                             <SidebarTool
+                                icon="ph:cursor-bold" label="Mouse" isActive={activeTool === "cursor"} onClick={() => onToolChange("cursor")}
+                            />
+                            <SidebarTool
                                 icon="solar:video-library-outline"
                                 label={t("tools.videos")}
                                 isActive={activeTool === "video"}

@@ -35,6 +35,8 @@ export interface TimelineProps {
     onUpdateZoomFragment?: (fragmentId: string, updates: Partial<ZoomFragment>) => void;
     onActivateZoomTool?: () => void;
     onActivateMotionTool?: () => void;
+    selectedPointerEventId?: string | null;
+    onSelectPointerEvent?: (fragmentId: string, eventId: string) => void;
     // Audio props
     audioTracks?: AudioTrack[];
     uploadedAudios?: UploadedAudio[];

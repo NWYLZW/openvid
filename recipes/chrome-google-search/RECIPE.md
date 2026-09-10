@@ -1,3 +1,5 @@
+当前鼠标效果版本使用pointer-effects-edit.json及runs/pointer-effects-2026-09-10/clean-source.mp4。Mouse面板和Mouse时间线可微调轨迹/点击，默认扭曲，60fps。此素材无预合成鼠标；下方历史版本只供参考。
+
 # Chrome / Google 搜索演示
 
 当前视频制作必须交付同一可编辑工程：Motion内可查看/微调关键帧与景深，AI后续用updateMotion保留人工修改。当前运行状态见runs/shared-edit-2026-09-10/run.md。

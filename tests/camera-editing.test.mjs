@@ -42,3 +42,12 @@ test('same-tick API calls and UI edits publish before the next stale check', asy
  assert.throws(()=>patch({depthOfField:initial.depthOfField},snapshot),/changed since/);
  assert.equal(ref.current[0].keyframes[1].pitch,14);
 });
+
+test('pointer updates preserve camera and depth settings; invalid event ranges are rejected',()=>{
+ const current=fixture();const pointer={enabled:true,size:28,effect:'distort',radius:.12,strength:.7,duration:.4,fps:60,events:[{id:'click',kind:'click',time:1,x:.4,y:.4}]};
+ const next=updateCameraFragment(current,{pointerTrack:pointer},current);
+ assert.deepEqual(next.keyframes,current.keyframes);assert.deepEqual(next.depthOfField,current.depthOfField);
+ assert.equal(next.pointerTrack.effect,'distort');
+ assert.throws(()=>updateCameraFragment(current,{pointerTrack:{...pointer,events:[{...pointer.events[0],time:8}]}},current),/range/);
+ assert.equal(updateCameraFragment(next,{pointerTrack:null},next).pointerTrack,undefined);
+});
