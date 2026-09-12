@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     // Generated browser assets are served as-is and are not application source.
     "public/ffmpeg/**",
     "public/draco/**",
+    "cli/duo-assets/vendor/**",
     // Independent backend and desktop projects have their own toolchains.
     "openvid-back/**",
     "openvid-autozoom/**",

@@ -93,6 +93,12 @@ export type MenuPage = "home" | "detail-2d" | "detail-3d";
 
 export const IMAGE_DEVICE_TEMPLATES = [
     {
+        id: "iphone-duo", title: "iPhone Duo", accentColor: "#d2dcf0", icon: "ph:device-mobile-camera",
+        modelUrl: "/models/iphone-duo.glb",
+        posterUrl: "/images/mockups-3d/iphone-duo.svg",
+        videoUrl: "",
+    },
+    {
         id: "iphone-13-pro-max",
         title: "iPhone 13 Pro",
         accentColor: "#B9D5FD",

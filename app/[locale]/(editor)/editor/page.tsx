@@ -1,4 +1,5 @@
 "use client";
+import { updateDuoConfig } from "@/lib/duo-config";
 import { defaultPointerTrack } from "@/app/components/ui/editor/PointerTrackEditor";
 import { updateCameraFragment } from "@/lib/camera-editing";
 import { useLocalAutomation } from "@/hooks/useLocalAutomation";
@@ -78,20 +79,21 @@ export default function Editor() {
     const tZoom = useTranslations("zoomFragmentEditor");
 
     const {
+        mockup3dSnapshot, restoreMockup3d, duoConfig, setDuoConfig,
         imagePhoneActive, setImagePhoneActive,
-        imagePhoneX, setImagePhoneX,
-        imagePhoneY, setImagePhoneY,
-        imagePhoneScale, setImagePhoneScale,
-        imagePhoneRotX, setImagePhoneRotX,
-        imagePhoneRotY, setImagePhoneRotY,
-        imagePhoneRotZ, setImagePhoneRotZ,
-        imagePhonePerspective, setImagePhonePerspective,
-        imagePhoneDevice, setImagePhoneDevice,
-        imagePhonePresetId, setImagePhonePresetId,
-        imagePhoneOpening, setImagePhoneOpening,
-        imagePhoneShadow, setImagePhoneShadow,
-        imagePhoneShadowColor, setImagePhoneShadowColor,
-        imagePhoneRefWidth, setImagePhoneRefWidth,
+        imagePhoneX,
+        imagePhoneY,
+        imagePhoneScale,
+        imagePhoneRotX,
+        imagePhoneRotY,
+        imagePhoneRotZ,
+        imagePhonePerspective,
+        imagePhoneDevice,
+        imagePhonePresetId,
+        imagePhoneOpening,
+        imagePhoneShadow,
+        imagePhoneShadowColor,
+        imagePhoneRefWidth,
     } = useMockup3dContext();
 
     // Undo/Redo system - centralized state management
@@ -371,6 +373,7 @@ export default function Editor() {
     }, []);
 
     const buildPhotoProjectSnapshot = useCallback(() => ({
+        ...mockup3dSnapshot,
         backgroundTab, selectedWallpaper, backgroundBlur, selectedImageUrl,
         backgroundColorConfig, padding, roundedCorners, shadows, aspectRatio,
         customDimensions, cropArea, mockupId, mockupConfig, canvasElements,
@@ -386,7 +389,7 @@ export default function Editor() {
         backgroundTab, selectedWallpaper, backgroundBlur, selectedImageUrl,
         backgroundColorConfig, padding, roundedCorners, shadows, aspectRatio,
         customDimensions, cropArea, mockupId, mockupConfig, canvasElements,
-        videoTransform, imageTransform, apply3DToBackground, imageMaskConfig,
+        videoTransform, imageTransform, apply3DToBackground, imageMaskConfig, mockup3dSnapshot,
     ]);
 
     const autoSaveCurrentProject = useCallback(async () => {
@@ -453,6 +456,7 @@ export default function Editor() {
             setApply3DToBackground(currentProject.apply3DToBackground);
             setImageMaskConfig(currentProject.imageMaskConfig);
             setImageZoomScale(currentProject.imageZoomScale ?? 1);
+            restoreMockup3d(currentProject);
             setImageDimensions({
                 width: currentProject.imageWidth,
                 height: currentProject.imageHeight,
@@ -462,7 +466,7 @@ export default function Editor() {
                 isRestoringProjectRef.current = false;
             }, 500);
         });
-    }, [currentProject, isPhotoMode]);
+    }, [currentProject, isPhotoMode, restoreMockup3d]);
 
     // Image project handlers
     const handleSelectImageProject = useCallback(async (projectId: string) => {
@@ -642,6 +646,7 @@ export default function Editor() {
         if (updateEditorStateDebounced.current) clearTimeout(updateEditorStateDebounced.current);
         updateEditorStateDebounced.current = setTimeout(() => {
             setEditorState({
+                ...mockup3dSnapshot,
                 backgroundTab,
                 selectedWallpaper,
                 backgroundBlur,
@@ -701,7 +706,7 @@ export default function Editor() {
         imagePhoneActive, imagePhoneX, imagePhoneY, imagePhoneScale, imagePhoneRotX, imagePhoneRotY,
         imagePhoneRotZ, imagePhonePerspective, imagePhoneDevice, imagePhonePresetId, imagePhoneOpening,
         imagePhoneShadow, imagePhoneShadowColor, imagePhoneRefWidth, mockupMotionFragments,
-        setEditorState, videoClips, globalSpeed
+        setEditorState, videoClips, globalSpeed, mockup3dSnapshot
     ]);
 
     const prevUndoRedoVersionRef = useRef(undoRedoVersion);
@@ -739,20 +744,7 @@ export default function Editor() {
             setImageMaskConfig(editorState.imageMaskConfig);
             setImageZoomScale(editorState.imageZoomScale ?? 1);
             setVideoMaskConfig(editorState.videoMaskConfig);
-            setImagePhoneActive(editorState.imagePhoneActive);
-            setImagePhoneX(editorState.imagePhoneX);
-            setImagePhoneY(editorState.imagePhoneY);
-            setImagePhoneScale(editorState.imagePhoneScale);
-            setImagePhoneRotX(editorState.imagePhoneRotX);
-            setImagePhoneRotY(editorState.imagePhoneRotY);
-            setImagePhoneRotZ(editorState.imagePhoneRotZ);
-            setImagePhonePerspective(editorState.imagePhonePerspective);
-            setImagePhoneDevice(editorState.imagePhoneDevice);
-            setImagePhonePresetId(editorState.imagePhonePresetId);
-            setImagePhoneOpening(editorState.imagePhoneOpening);
-            setImagePhoneShadow(editorState.imagePhoneShadow);
-            setImagePhoneShadowColor(editorState.imagePhoneShadowColor);
-            setImagePhoneRefWidth(editorState.imagePhoneRefWidth ?? 0);
+            restoreMockup3d(editorState);
             setMockupMotionFragments(editorState.mockupMotionFragments ?? []);
             setGlobalSpeed(editorState.globalSpeed ?? 1);
 
@@ -790,7 +782,7 @@ export default function Editor() {
                 isRestoringProjectRef.current = false;
             }, 500);
         });
-    }, [undoRedoVersion]);
+    }, [undoRedoVersion, restoreMockup3d]);
 
     // Handler para cambiar el mockup
     const handleMockupChange = useCallback((newMockupId: string) => {
@@ -969,6 +961,7 @@ export default function Editor() {
     }, [currentTime]);
 
     const buildVideoProjectSnapshot = useCallback(() => ({
+        ...mockup3dSnapshot,
         videoClips,
         trimRange,
         globalSpeed,
@@ -1016,7 +1009,7 @@ export default function Editor() {
         padding, roundedCorners, shadows, aspectRatio, customDimensions, cropArea,
         videoTransform, imageTransform, apply3DToBackground,
         imageMaskConfig, videoMaskConfig, imageZoomScale,
-        cameraConfig, cameraUrl,
+        cameraConfig, cameraUrl, mockup3dSnapshot,
     ]);
 
     const [showExportSuccess, setShowExportSuccess] = useState(false);
@@ -1795,6 +1788,7 @@ export default function Editor() {
                         setImageMaskConfig(savedProject.imageMaskConfig);
                         setVideoMaskConfig(savedProject.videoMaskConfig);
                         setImageZoomScale(savedProject.imageZoomScale ?? 1);
+                        restoreMockup3d(savedProject);
                         setMockupMotionFragments(savedProject.mockupMotionFragments ?? []);
                         setGlobalSpeed(savedProject.globalSpeed ?? 1);
 
@@ -2039,7 +2033,7 @@ export default function Editor() {
 
         document.addEventListener("visibilitychange", handleVisibilityChange);
         return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-    }, [loadUploadedVideo, clearHistory, isPhotoMode, setClipUrl]);
+    }, [loadUploadedVideo, clearHistory, isPhotoMode, setClipUrl, restoreMockup3d]);
 
     useEffect(() => {
         if (videoRef.current) {
@@ -2775,10 +2769,16 @@ export default function Editor() {
                 !!videoRef.current && videoRef.current.readyState >= 2 && !isExportingRef.current &&
                 ["idle", "complete", "error"].includes(exportProgress.status),
             duration: videoDuration,
+            deviceReady: !imagePhoneActive || imagePhoneDevice !== "iphone-duo" || !!document.querySelector('canvas[data-duo-ready="true"]'),
             currentTime,
             exportProgress,
             project: buildVideoProjectSnapshot(),
         }),
+        updateDuo: (changes, expected) => {
+            const next = updateDuoConfig(duoConfig, changes, expected);
+            if (next.keyframes.some(f => f.time > videoDuration)) throw new Error("Duo keyframe exceeds video duration");
+            setDuoConfig(next);
+        },
         updateMotion: (id, changes, expected) => {
             const current = mockupMotionFragmentsRef.current.find(f => f.id === id);
             if (!current) throw new Error("Motion fragment no longer exists");
@@ -2807,7 +2807,18 @@ export default function Editor() {
             setPadding(edit.padding);
             setRoundedCorners(edit.roundedCorners);
             setShadows(edit.shadows);
-            setMockupId(edit.mockup);
+            setMockupId(edit.mockup === 'iphone-duo' ? 'none' : edit.mockup);
+            setImagePhoneActive(edit.mockup === 'iphone-duo');
+            if (edit.duo) {
+                const transform = edit.duo.transform;
+                restoreMockup3d({
+                    imagePhoneActive: true, imagePhoneDevice: 'iphone-duo', duoConfig: edit.duo.config,
+                    imagePhoneX: transform?.x ?? 0, imagePhoneY: transform?.y ?? 0, imagePhoneScale: transform?.scale ?? 1,
+                    imagePhoneRotX: transform?.rotateX ?? 0, imagePhoneRotY: transform?.rotateY ?? 0, imagePhoneRotZ: transform?.rotateZ ?? 0,
+                    viewer3DEnvironment: edit.duo.environment ?? 'studio', viewer3DGlow: edit.duo.glow ?? 1,
+                    viewer3DAutoRotate: edit.duo.autoRotate ?? false, viewer3DRotationSpeed: edit.duo.rotationSpeed ?? 3.5,
+                });
+            }
             setMockupConfig({ darkMode: true, frameColor: "#18232e", url: "Google Search", headerScale: 75, headerOpacity: 100, cornerRadius: edit.roundedCorners });
             setSelectedImageUrl("");
             setUnsplashBgUrl("");
@@ -3233,6 +3244,8 @@ export default function Editor() {
 
                             <Suspense fallback={<TimelineSkeleton />}>
                                 <Timeline
+                                    duoConfig={imagePhoneActive && imagePhoneDevice === "iphone-duo" ? duoConfig : undefined}
+                                    onEditDuo={() => handleMockupClick("3d")}
                                     selectedCameraZoomId={selectedCameraZoomId}
                                     onSelectCameraZoom={id=>{setSelectedCameraZoomId(id);handleSelectZoomFragment(null);handleSelectMockupMotionFragment(id);setActiveTool('zoom');}}
                                     selectedPointerEventId={selectedPointerEventId}

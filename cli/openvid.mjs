@@ -7,6 +7,11 @@ import { resolve } from 'node:path';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const args = process.argv.slice(2);
 const command = args.shift() ?? 'help';
+if (command === 'duo') {
+  try { await (await import('./duo.mjs')).duoCommand(args); }
+  catch (error) { console.error(error.message); process.exit(1); }
+  process.exit(0);
+}
 if (command === 'record' || command === 'media') {
   try { await (await import('./media.mjs')).mediaCommand(command, args); }
   catch (error) { console.error(error.message); process.exit(1); }
@@ -32,7 +37,7 @@ async function status() {
   }
 }
 if (command === 'help' || command === '--help') {
-  console.log(`Openvid local CLI\n\npnpm openvid status [--port 3088]  Check the editor (JSON; exit 1 if unavailable).\npnpm openvid start  [--port 3088]  Run the production build in the foreground.\n\nFirst setup: pnpm install --frozen-lockfile; cp .env.example .env.local; pnpm build\nStop a service started here with Ctrl+C. Existing services are left running.\nNative recording: use Openvid Record -> Share screen; see openvid-docs native-recording.\nrecord encode <take-dir> <output.mp4>  Encode captured CDP frames.\nmedia assemble <plan.json>  Trim, retime, hold, and join silent clips.\nmedia inspect <file>  Inspect actual media.\nmedia pointer <plan.json>  Visualize logged native operation coordinates.\nBrowser capture uses automation/cdp-recorder.mjs inside the computer-use REPL. Editor effects and export use Openvid.`);
+  console.log(`Openvid local CLI\n\npnpm openvid status [--port 3088]  Check the editor (JSON; exit 1 if unavailable).\npnpm openvid start  [--port 3088]  Run the production build in the foreground.\n\nFirst setup: pnpm install --frozen-lockfile; cp .env.example .env.local; pnpm build\nStop a service started here with Ctrl+C. Existing services are left running.\nduo prepare-assets [--python /path/to/python]  Prepare the local Duo model.\nduo defaults | validate <config.json> | sample <config.json> <seconds>  Inspect Duo settings.\nNative recording: use Openvid Record -> Share screen; see openvid-docs native-recording.\nrecord encode <take-dir> <output.mp4>  Encode captured CDP frames.\nmedia assemble <plan.json>  Trim, retime, hold, and join silent clips.\nmedia inspect <file>  Inspect actual media.\nmedia pointer <plan.json>  Visualize logged native operation coordinates.\nBrowser capture uses automation/cdp-recorder.mjs inside the computer-use REPL. Editor effects and export use Openvid.`);
 } else if (command === 'status') {
   const result = await status();
   console.log(JSON.stringify(result));

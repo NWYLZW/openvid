@@ -1,5 +1,7 @@
 "use client";
-import { Canvas } from "@react-three/fiber";
+import { DuoScene, type Duo3DApi } from "./Duo3DViewer";
+import type { DuoConfig } from "@/lib/duo-config";
+import { Canvas, events as createPointerEvents } from "@react-three/fiber";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { IPhone13ProMax3DApi, IPhone13ProMaxScene } from "./IPhone13ProMax3DViewer";
@@ -20,9 +22,12 @@ export type Mockup3DApi =
   | Phone3DApi
   | Laptop3DApi
   | IPhone17ProMax3DApi
-  | IPadMini63DApi;
+  | IPadMini63DApi
+  | Duo3DApi;
 
 export interface Mockup3DStageProps {
+  duoConfig?: DuoConfig;
+  timelineTime?: number;
   imageUrl?: string | null;
   imageMaskConfig?: ImageMaskConfigLike | null;
   cropArea?: { x: number; y: number; width: number; height: number } | null;
@@ -166,6 +171,21 @@ export function Mockup3DStage({ device, rootRef: externalRootRef, cameraRef: ext
   return (
     <>
       <Canvas
+        events={device === "iphone-duo" ? (store) => ({
+          ...createPointerEvents(store),
+          compute: (event, state) => {
+            // offsetX/Y are unscaled CSS pixels; R3F size is measured after the
+            // outer device scale. Use client coordinates and the same DOM rect.
+            const rect = state.gl.domElement.getBoundingClientRect();
+            if (!rect.width || !rect.height) return;
+            state.pointer.set(
+              (event.clientX - rect.left) / rect.width * 2 - 1,
+              -(event.clientY - rect.top) / rect.height * 2 + 1,
+            );
+            state.raycaster.setFromCamera(state.pointer, state.camera);
+          },
+        }) : undefined}
+        className={device === "iphone-duo" ? "openvid-duo-stage" : undefined}
         style={{ width: "100%", height: "100%", overflow: "visible" }}
         gl={{
           antialias: true,
@@ -185,8 +205,9 @@ export function Mockup3DStage({ device, rootRef: externalRootRef, cameraRef: ext
           handleMount(gl.domElement);
         }}
       >
-        <Motion3DApplicator rootRef={rootRef} motionTransform={props.motionTransform ?? REST_MOCKUP_3D_MOTION} device={device} baseRotationZ={props.initialRotationZ ?? 0} />
+        {device !== "iphone-duo" && <Motion3DApplicator rootRef={rootRef} motionTransform={props.motionTransform ?? REST_MOCKUP_3D_MOTION} device={device} baseRotationZ={props.initialRotationZ ?? 0} />}
         <Suspense fallback={null}>
+          {device === "iphone-duo" && (<DuoScene {...props} rootRef={rootRef} cameraRef={cameraRef} onLoaded={markLoaded} />)}
           {device === "iphone-13-pro-max" && (
             <IPhone13ProMaxScene {...props} rootRef={rootRef} cameraRef={cameraRef} onLoaded={markLoaded} />
           )}

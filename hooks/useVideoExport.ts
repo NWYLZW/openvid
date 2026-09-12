@@ -340,7 +340,7 @@ async function exportWithMediabunny(
                 nextFrameReady = waitForVideoFrame(video);
             }
 
-            await videoSource.add(outputTime, frameDuration);
+            await Promise.all([videoSource.add(outputTime, frameDuration), nextFrameReady]);
 
             if (frameIndex % 10 === 0 || frameIndex === totalFrames - 1) {
                 const progress = 10 + Math.round((frameIndex / totalFrames) * 80);
@@ -351,9 +351,6 @@ async function exportWithMediabunny(
                 });
             }
 
-            if (nextFrameReady) {
-                await nextFrameReady;
-            }
         }
 
         if (cancellation.cancelled) {
@@ -573,7 +570,7 @@ async function exportWithMediabunnyAndAudio(
                     }
                 }
 
-                await videoSource.add(outputTime, frameDuration);
+                await Promise.all([videoSource.add(outputTime, frameDuration), nextFrameReady]);
 
                 if (frameIndex % 10 === 0 || frameIndex === totalFrames - 1) {
                     const progress = 5 + Math.round((frameIndex / totalFrames) * 50);
@@ -586,9 +583,6 @@ async function exportWithMediabunnyAndAudio(
                     });
                 }
 
-                if (nextFrameReady) {
-                    await nextFrameReady;
-                }
             }
         } finally {
             if (currentClipBlobUrl) {

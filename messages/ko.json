@@ -684,6 +684,7 @@
       "macbook-photo": "MacBook 사진"
     },
     "devices": {
+            "iphone-duo": "iPhone Duo",
       "iphone-13-pro-max": "iPhone 13 Pro",
       "double_iphone_13_pro": "iPhone 13 Pro (2대)",
       "iphone-17-pro-max": "iPhone 17 Pro",

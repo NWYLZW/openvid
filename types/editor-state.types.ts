@@ -1,3 +1,4 @@
+import { defaultMockup3DState, type Mockup3DPersistedState } from "@/lib/mockup3d-state";
 import type { BackgroundTab, AspectRatio, BackgroundColorConfig, CropArea, ZoomFragment, AudioTrack, ZoomMovement } from "@/types";
 import type { TrimRange } from "@/types/timeline.types";
 import type { MockupConfig } from "@/types/mockup.types";
@@ -13,7 +14,7 @@ export interface VideoTransform {
     translateY: number;
 }
 
-export interface EditorState {
+export interface EditorState extends Mockup3DPersistedState {
     backgroundTab: BackgroundTab;
     selectedWallpaper: number;
     backgroundBlur: number;
@@ -39,20 +40,7 @@ export interface EditorState {
     apply3DToBackground: boolean;
     imageMaskConfig: ImageMaskConfig;
     videoMaskConfig: ImageMaskConfig;
-    imagePhoneActive: boolean;
-    imagePhoneX: number;
-    imagePhoneY: number;
-    imagePhoneScale: number;
-    imagePhoneRotX: number;
-    imagePhoneRotY: number;
-    imagePhoneRotZ: number;
-    imagePhonePerspective: number;
-    imagePhoneDevice: 'phone' | 'iphone' | 'iphone-13-pro-max' | 'iphone-17-pro-max' | 'double_iphone_13_pro' | 'laptop' | 'ipad_mini_6_2021';
-    imagePhonePresetId: string;
-    imagePhoneOpening: number;
-    imagePhoneShadow: number;
-    imagePhoneShadowColor: string;
-    imagePhoneRefWidth: number;
+
     mockupMotionFragments: MockupMotionFragment[];
     videoClips: VideoTrackClip[];
     zoomMovements: ZoomMovement[];
@@ -112,20 +100,7 @@ export function createInitialEditorState(overrides?: Partial<EditorState>): Edit
         videoMaskConfig: {
             enabled: false,
         },
-        imagePhoneActive: false,
-        imagePhoneX: 0,
-        imagePhoneY: 0,
-        imagePhoneScale: 1,
-        imagePhoneRotX: 0,
-        imagePhoneRotY: 0,
-        imagePhoneRotZ: 0,
-        imagePhonePerspective: 600,
-        imagePhoneDevice: 'phone',
-        imagePhonePresetId: 'front',
-        imagePhoneOpening: 1,
-        imagePhoneShadow: 0.6,
-        imagePhoneShadowColor: '#000000',
-        imagePhoneRefWidth: 0,
+        ...defaultMockup3DState(),
         mockupMotionFragments: [],
         videoClips: [],
         ...overrides,

@@ -16,6 +16,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { DuoControls } from "./DuoControls";
+import { useMockup3dContext } from "@/app/contexts/Mockup3dContext";
+import { defaultDuoConfig } from "@/lib/duo-config";
 import { Toggle } from "@/components/ui/toggle";
 
 function PositionPad({
@@ -192,7 +195,6 @@ export interface Mockup3dMenuProps {
 }
 
 export function Mockup3dMenu({
-    activeDeviceTpl,
     imagePhoneDevice,
     isLaptop,
     imagePhoneScale,
@@ -229,6 +231,8 @@ export function Mockup3dMenu({
     setViewer3DEnvironment,
 }: Mockup3dMenuProps) {
     const t = useTranslations("mockupMenu");
+    const { setDuoConfig, duoConfig, imagePhoneShadowColor } = useMockup3dContext();
+    const isDuo = imagePhoneDevice === "iphone-duo";
 
     const handleReset = useCallback(() => {
         setImagePhoneX(0);
@@ -240,7 +244,10 @@ export function Mockup3dMenu({
         setImagePhoneRotY(defaultRotY);
         setImagePhoneRotZ(0);
 
-        if (imagePhoneDevice === "laptop") {
+        if (imagePhoneDevice === "iphone-duo") {
+            setDuoConfig(defaultDuoConfig());
+            setImagePhoneRotX(0); setImagePhoneRotY(0); setImagePhoneScale(.58);
+        } else if (imagePhoneDevice === "laptop") {
             setImagePhoneOpening(1);
             setImagePhoneShadow(0.7);
         } else if (imagePhoneDevice === "double_iphone_13_pro") {
@@ -254,7 +261,7 @@ export function Mockup3dMenu({
         setImagePhoneShadowColor("#000000");
         setImagePhonePresetId("custom");
     }, [
-        imagePhoneDevice,
+        imagePhoneDevice, setDuoConfig,
         setImagePhoneX,
         setImagePhoneY,
         setImagePhoneScale,
@@ -289,7 +296,7 @@ export function Mockup3dMenu({
                     </button>
                 </div>
 
-                {mediaType === "video" && (
+                {(mediaType === "video" || isDuo) && (
                     <div className="flex flex-col gap-2">
                         <Position3DPresetsEditor
                             device={imagePhoneDevice}
@@ -351,6 +358,8 @@ export function Mockup3dMenu({
                         {t("modelProperties") || "Propiedades del Modelo"}
                     </span>
 
+                    {isDuo && <DuoControls section="model" />}
+                    {isDuo && <label className="flex items-center justify-between text-xs text-muted-foreground">Shadow color<input aria-label="Duo shadow color" type="color" value={imagePhoneShadowColor} onChange={e => setImagePhoneShadowColor(e.target.value)} /></label>}
                     {isLaptop && (
                         <SliderControl
                             icon="material-symbols:laptop-chromebook-outline"
@@ -381,7 +390,8 @@ export function Mockup3dMenu({
                         {t("lightingAndEnvironment") || "Entorno e Iluminación"}
                     </span>
 
-                    <div className="flex flex-col gap-1.5">
+                    {isDuo && <DuoControls section="lighting" />}
+                    {!(isDuo && duoConfig.referenceLighting) && <div className="flex flex-col gap-1.5">
                         <span className="text-[11px] font-medium text-muted-foreground">
                             {t("environment")}
                         </span>
@@ -400,7 +410,7 @@ export function Mockup3dMenu({
                                 ))}
                             </SelectContent>
                         </Select>
-                    </div>
+                    </div>}
 
                     <SliderControl
                         icon="mdi:white-balance-sunny"
@@ -419,6 +429,7 @@ export function Mockup3dMenu({
                         {t("presentation") || "Animación y Exhibición"}
                     </span>
 
+                    {isDuo && <DuoControls section="animation" />}
                     <div
                         className={`flex items-center justify-between px-3 py-2 squircle-element border transition-all ${viewer3DAutoRotate
                                 ? "bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-300"

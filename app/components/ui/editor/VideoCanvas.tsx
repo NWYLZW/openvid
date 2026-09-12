@@ -136,6 +136,7 @@ function VideoCanvasInner({
 
     // Motion 3D phone overlay state (reads from shared MotionContext)
     const {
+        duoConfig,
         imagePhoneActive, imagePhoneX, imagePhoneY, imagePhoneScale,
         setImagePhoneScale, setImagePhoneX, setImagePhoneY,
         imagePhoneRotX, setImagePhoneRotX, imagePhoneRotY, setImagePhoneRotY,
@@ -255,6 +256,7 @@ function VideoCanvasInner({
     // Root THREE.Group ref for applying 3D motion during export rendering.
     const imagePhoneRootRef = useRef<THREE.Group | null>(null);
     const imagePhoneApiRef = useRef<{
+        setTime?: (time: number, motion?: Mockup3DMotionTransform) => void;
         renderAt: (w: number, h: number) => void;
         restorePreview: () => void;
         hasBuiltInShadow?: boolean;
@@ -599,11 +601,15 @@ function VideoCanvasInner({
 
     useEffect(() => {
         const key = `${aspectRatio}:${customAspectRatio?.width ?? ""}x${customAspectRatio?.height ?? ""}`;
-        if (prevAspectKeyRef.current !== null && prevAspectKeyRef.current !== key) {
+        // Restoring a saved aspect is not a user resize: the saved 3D scale
+        // already belongs to that aspect. Reapplying the ratio compounds it.
+        if (isRestoringProjectRef?.current) {
+            pendingAspectRescaleRef.current = false;
+        } else if (prevAspectKeyRef.current !== null && prevAspectKeyRef.current !== key) {
             pendingAspectRescaleRef.current = true;
         }
         prevAspectKeyRef.current = key;
-    }, [aspectRatio, customAspectRatio]);
+    }, [aspectRatio, customAspectRatio, isRestoringProjectRef]);
 
     useEffect(() => {
         if (!canvasDimensions) return;
@@ -1415,6 +1421,10 @@ function VideoCanvasInner({
 
         const frameTime = mediaType === "video" ? (explicitTimelineTime ?? (video ? video.currentTime : 0)) : 0;
 
+        if (imagePhoneActive && imagePhoneDevice === "iphone-duo") imagePhoneApiRef.current?.setTime?.(frameTime);
+        if (highQuality && imagePhoneActive && imagePhoneDevice === "iphone-duo" && (!imagePhoneApiRef.current || imagePhoneCanvasRef.current?.dataset.duoReady !== "true")) {
+            throw new Error("iPhone Duo is still loading its model or screen images. Wait for the preview before exporting.");
+        }
         canvas.dataset.frameTime = String(frameTime);
 
         const visibleElementsAtFrame = mediaType === "video"
@@ -1577,7 +1587,8 @@ function VideoCanvasInner({
                 const motionRoot = imagePhoneRootRef.current;
                 const m3d = motion3DForFrame;
                 const previewMotion = mockup3DMotionPreview;
-                const has3DMotion = motionRoot && m3d !== REST_MOCKUP_3D_MOTION;
+                if (imagePhoneDevice === "iphone-duo") imagePhoneApiRef.current?.setTime?.(frameTime, m3d);
+                const has3DMotion = imagePhoneDevice !== "iphone-duo" && motionRoot && m3d !== REST_MOCKUP_3D_MOTION;
                 let savedBase: { rx: number; ry: number; rz: number; sx: number; sy: number; sz: number; px: number; py: number; pz: number } | null = null;
                 if (has3DMotion && motionRoot) {
                     // Save the current (base + previewMotion) state...
@@ -2705,6 +2716,8 @@ function VideoCanvasInner({
                                                     >
                                                         <Mockup3DFrame
                                                             device={imagePhoneDevice}
+                                                            duoConfig={duoConfig}
+                                                            timelineTime={currentTime}
                                                             rootRef={imagePhoneRootRef}
                                                             imageUrl={imageUrl}
                                                             videoElement={activeVideoElement ?? undefined}

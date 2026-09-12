@@ -24,6 +24,7 @@ interface DeviceLayout {
 }
 
 const DEVICE_LAYOUT: Record<ImageDeviceId, DeviceLayout> = {
+  "iphone-duo": {width: 1000, height: 820, overlay: {kind: "fixed", pointerEvents: "auto"}, maskInset: 0},
   "iphone-13-pro-max": {
     width: 480, height: 1000,
     marginTop: "100px", marginRight: "0",
@@ -142,10 +143,10 @@ export function Mockup3DFrame({ device, rootRef: externalRootRef, ...stageProps 
   return (
     <div
       style={{
-        display: "inline-block",
+        display: device === "iphone-duo" ? "block" : "inline-block",
         transformOrigin: "top center",
         width: layout.width,
-        height: layout.height + (hasShadow ? computedBlur * 0.8 : 0),
+        height: layout.height + (hasShadow && device !== "iphone-duo" ? computedBlur * 0.8 : 0),
         marginTop: layout.marginTop,
         marginLeft: layout.marginLeft,
         marginRight: layout.marginRight,

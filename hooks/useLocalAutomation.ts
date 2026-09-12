@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { isLocalOnly } from '@/lib/local-mode';
 import type { MockupMotionFragment } from '@/lib/mockup-motion';
 import type { MotionKeyframe } from '@/lib/motion-keyframes';
+import type { DuoConfig } from '@/lib/duo-config';
 import type { LocalEdit } from '@/lib/local-edit';
 import type { VideoProject } from '@/lib/video-project-cache';
 import type { ExportProgress, ExportQuality, LibraryVideoInfo } from '@/types';
@@ -10,6 +11,7 @@ import type { ExportProgress, ExportQuality, LibraryVideoInfo } from '@/types';
 interface AutomationState {
   ready: boolean;
   duration: number;
+  deviceReady?: boolean;
   currentTime: number;
   exportProgress: ExportProgress;
   project: Omit<VideoProject, 'id' | 'savedAt' | 'schemaVersion'>;
@@ -18,6 +20,7 @@ interface LocalAutomation {
   version: 1;
   state(): AutomationState;
   apply(edit: LocalEdit): Promise<AutomationState>;
+  updateDuo(changes: Partial<DuoConfig>, expected: DuoConfig): Promise<AutomationState>;
   updateMotion(id: string, changes: {keyframes?: MotionKeyframe[]; depthOfField?: unknown; pointerTrack?: unknown; dockLaunch?: unknown}, expected: MockupMotionFragment): Promise<AutomationState>;
   save(): Promise<void>;
   sources(): Promise<LibraryVideoInfo[]>;
@@ -28,7 +31,7 @@ interface LocalAutomation {
 }
 declare global { interface Window { openvid?: LocalAutomation } }
 
-export function useLocalAutomation(handlers: Omit<LocalAutomation, 'version' | 'apply' | 'replaceSource' | 'updateMotion'> & { updateMotion(id: string, changes: {keyframes?: MotionKeyframe[]; depthOfField?: unknown; pointerTrack?: unknown; dockLaunch?: unknown}, expected: MockupMotionFragment): void; apply(edit: LocalEdit): void; replaceSource(id: string): Promise<string> }) {
+export function useLocalAutomation(handlers: Omit<LocalAutomation, 'version' | 'apply' | 'replaceSource' | 'updateMotion' | 'updateDuo'> & { updateDuo(changes: Partial<DuoConfig>, expected: DuoConfig): void; updateMotion(id: string, changes: {keyframes?: MotionKeyframe[]; depthOfField?: unknown; pointerTrack?: unknown; dockLaunch?: unknown}, expected: MockupMotionFragment): void; apply(edit: LocalEdit): void; replaceSource(id: string): Promise<string> }) {
   const current = useRef(handlers);
   useEffect(() => { current.current = handlers; });
   useEffect(() => {
@@ -44,10 +47,16 @@ export function useLocalAutomation(handlers: Omit<LocalAutomation, 'version' | '
         current.current.apply(edit);
         await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
         const deadline = performance.now() + 10000;
-        while (!api.state().ready) {
+        while (!api.state().ready || api.state().deviceReady === false) {
           if (performance.now() > deadline) throw new Error('Edit applied, but media did not become ready within 10 seconds');
           await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
         }
+        return api.state();
+      },
+      async updateDuo(changes, expected) {
+        ready();
+        current.current.updateDuo(structuredClone(changes), structuredClone(expected));
+        await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
         return api.state();
       },
       async updateMotion(id, changes, expected) {
@@ -78,6 +87,7 @@ export function useLocalAutomation(handlers: Omit<LocalAutomation, 'version' | '
       },
       export(quality) {
         ready();
+        if (current.current.state().deviceReady === false) throw new Error('3D device model or screen images are still loading');
         if (!['4k','2k','1080p','720p','480p','gif','webm-alpha'].includes(quality)) throw new Error('Unknown export quality');
         current.current.export(quality);
       },

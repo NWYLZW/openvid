@@ -55,3 +55,8 @@ plan-integracion-openvid-autozoom.md
 
 # Generated skill/plugin distribution
 /dist/openvid-skills/
+
+# Locally prepared Apple reference assets
+/public/models/duo/
+/public/models/iphone-duo.glb
+/.duo-tools/

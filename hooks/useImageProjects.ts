@@ -1,5 +1,6 @@
 "use client";
 
+import { defaultMockup3DState, type Mockup3DPersistedState } from "@/lib/mockup3d-state";
 import { useState, useCallback, useEffect } from "react";
 import type { ImageProject, ImageProjectPreview } from "@/types/image-project.types";
 import {
@@ -18,7 +19,7 @@ import type { Preview3DConfig, ImageMaskConfig } from "@/types/photo.types";
 import { DEFAULT_MOCKUP_CONFIG } from "@/types/mockup.types";
 import { DEFAULT_MASK_CONFIG, PREVIEW_CONFIGS } from "@/types/photo.types";
 
-interface ImageProjectState {
+interface ImageProjectState extends Mockup3DPersistedState {
     backgroundTab: BackgroundTab;
     selectedWallpaper: number;
     backgroundBlur: number;
@@ -42,20 +43,7 @@ interface ImageProjectState {
     apply3DToBackground: boolean;
     imageMaskConfig: ImageMaskConfig;
     // ── Motion / 3D device mockup state (image mode) ──────────────────────
-    imagePhoneActive: boolean;
-    imagePhoneX: number;
-    imagePhoneY: number;
-    imagePhoneScale: number;
-    imagePhoneRotX: number;
-    imagePhoneRotY: number;
-    imagePhoneRotZ: number;
-    imagePhonePerspective: number;
-    imagePhoneDevice: 'phone' | 'iphone' | 'iphone-13-pro-max' | 'iphone-17-pro-max' | 'double_iphone_13_pro' | 'laptop' | 'ipad_mini_6_2021';
-    imagePhonePresetId: string;
-    imagePhoneOpening: number;
-    imagePhoneShadow: number;
-    imagePhoneShadowColor: string;
-    imagePhoneRefWidth: number;
+
     imageZoomScale: number;
 }
 
@@ -83,20 +71,7 @@ const DEFAULT_PROJECT_STATE: ImageProjectState = {
     apply3DToBackground: false,
     imageMaskConfig: DEFAULT_MASK_CONFIG,
     // ── Motion / 3D device mockup state defaults (match MotionContext) ───
-    imagePhoneActive: false,
-    imagePhoneX: 0,
-    imagePhoneY: 0,
-    imagePhoneScale: 1,
-    imagePhoneRotX: 0,
-    imagePhoneRotY: 0,
-    imagePhoneRotZ: 0,
-    imagePhonePerspective: 600,
-    imagePhoneDevice: 'phone',
-    imagePhonePresetId: 'front',
-    imagePhoneOpening: 1,
-    imagePhoneShadow: 0.6,
-    imagePhoneShadowColor: "#000000",
-    imagePhoneRefWidth: 0,
+    ...defaultMockup3DState(),
     imageZoomScale: 1,
 };
 export function useImageProjects() {

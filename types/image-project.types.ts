@@ -1,9 +1,10 @@
+import { type Mockup3DPersistedState } from "@/lib/mockup3d-state";
 import type { BackgroundTab, BackgroundColorConfig, AspectRatio, CropArea } from "@/types";
 import type { MockupConfig } from "@/types/mockup.types";
 import { CanvasElement } from "./canvas-elements.types";
 import type { Preview3DConfig, ImageMaskConfig } from "./photo.types";
 
-export interface ImageProject {
+export interface ImageProject extends Mockup3DPersistedState {
     id: string;
     imageBlob: Blob;
     imageDataUrl: string;
@@ -42,20 +43,7 @@ export interface ImageProject {
     imageMaskConfig: ImageMaskConfig;
 
     // ── Motion / 3D device mockup state (image mode) ──────────────────────
-    imagePhoneActive: boolean;
-    imagePhoneX: number;
-    imagePhoneY: number;
-    imagePhoneScale: number;
-    imagePhoneRotX: number;
-    imagePhoneRotY: number;
-    imagePhoneRotZ: number;
-    imagePhonePerspective: number;
-    imagePhoneDevice: 'phone' | 'iphone' | 'iphone-13-pro-max' | 'double_iphone_13_pro' | 'laptop' | 'iphone-17-pro-max' | 'ipad_mini_6_2021';
-    imagePhonePresetId: string;
-    imagePhoneOpening: number;
-    imagePhoneShadow: number;
-    imagePhoneShadowColor: string;
-    imagePhoneRefWidth: number;
+
     createdAt: number;
     imageZoomScale: number;
 }

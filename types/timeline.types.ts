@@ -1,3 +1,4 @@
+import type { DuoConfig } from "@/lib/duo-config";
 import { ZoomFragment, ZoomMovement } from "./zoom.types";
 import type { AudioTrack, UploadedAudio } from "./audio.types";
 import type { VideoTrackClip } from "./video-track.types";
@@ -10,6 +11,8 @@ export interface TrimRange {
 }
 
 export interface TimelineProps {
+    duoConfig?: DuoConfig;
+    onEditDuo?: () => void;
     videoDuration: number;
     currentTime: number;
     onSeek: (time: number) => void;

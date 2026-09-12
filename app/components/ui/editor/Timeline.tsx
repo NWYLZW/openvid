@@ -1,4 +1,5 @@
 "use client";
+import { DuoFoldTrack } from "./DuoFoldTrack";
 import {dockExitEnd} from "@/lib/dock-launch";
 import { useRef, useMemo, useCallback, useEffect, useState } from "react";
 import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
@@ -22,6 +23,7 @@ import { ZoomMovementTrackItem, MIN_MOVEMENT_TRACK_DURATION } from "./ZoomMoveme
 import { collectSnapPoints, findSnap } from "@/lib/timeline-snapping";
 
 export function Timeline({
+    duoConfig, onEditDuo,
     videoDuration,
     currentTime,
     onSeek,
@@ -205,9 +207,11 @@ export function Timeline({
     const cameraZooms = useMemo(()=>mockupMotionFragments.map(cameraZoomView).filter((v):v is NonNullable<typeof v>=>v!==null),[mockupMotionFragments]);
     const showCameraZoomRow = cameraZooms.length>0;
     const showDockRow = mockupMotionFragments.some(f=>!!f.dockLaunch);
+    const showDuoRow = !!duoConfig;
     const showPointerRow = mockupMotionFragments.some(f=>!!f.pointerTrack);
     const totalLanesCount = useMemo(() => {
         let count = 0;
+        if (showDuoRow) count += 1;
         if (showMovementRow) count += 1;
         if (showPointerRow) count += 1;
         if (showDockRow) count += 1;
@@ -216,7 +220,7 @@ export function Timeline({
         if (audioTracks.length > 0) count += audioLaneCount;
         if (mockupMotionFragments.length > 0) count += 1;
         return count;
-    }, [showDockRow, showCameraZoomRow, showPointerRow, showMovementRow, canvasElements.length, elementLaneCount, audioTracks.length, audioLaneCount, mockupMotionFragments.length]);
+    }, [showDuoRow, showDockRow, showCameraZoomRow, showPointerRow, showMovementRow, canvasElements.length, elementLaneCount, audioTracks.length, audioLaneCount, mockupMotionFragments.length]);
 
     useEffect(() => {
         if (!isDraggingTrim) {
@@ -570,6 +574,7 @@ export function Timeline({
                                 dockTracksCount={mockupMotionFragments.filter(f=>f.dockLaunch).length}
                                 pointerTracksCount={mockupMotionFragments.filter(f=>f.pointerTrack).length}
                                 showMovementRow={showMovementRow}
+                                showDuoRow={showDuoRow}
                             />
                             <div className="relative grid grid-rows-subgrid min-w-0" style={{ gridColumn: 2, gridRow: '1 / -1' }}>
                                 <motion.div
@@ -1009,6 +1014,7 @@ export function Timeline({
                                         {mockupMotionFragments.filter(f=>f.pointerTrack).flatMap(f=>f.pointerTrack!.events.filter(e=>f.startTime+e.time>=Math.max(0,f.startTime)&&f.startTime+e.time<=Math.min(validDuration,f.endTime)).map(e=><button key={`${f.id}:${e.id}`} aria-pressed={selectedPointerEventId===e.id} aria-label={`${e.kind==='click'?'Click':'Move'} event at ${(f.startTime+e.time).toFixed(2)}s`} title={`${e.kind} ${(f.startTime+e.time).toFixed(2)}s`} className={`absolute top-2 -translate-x-1/2 rounded px-1.5 py-1 text-[10px] ${e.kind==='click'?'bg-violet-600 text-white':'border border-violet-400 bg-background text-violet-600'}`} style={{left:`clamp(8px, ${(f.startTime+e.time)/validDuration*100}%, calc(100% - 8px))`,opacity:f.pointerTrack!.enabled?1:.4}} onClick={ev=>{ev.stopPropagation();onSeek(f.startTime+e.time);onSelectPointerEvent?.(f.id,e.id);}}>{e.kind==='click'?'●':'◆'}</button>))}
                                     </div>}
 
+                                    {duoConfig && <DuoFoldTrack config={duoConfig} duration={validDuration} currentTime={currentTime} onSeek={onSeek} onEdit={onEditDuo} />}
                                     {mockupMotionFragments.length > 0 && (
                                         <div className="shrink-0 w-full flex items-center relative"
                                             onClick={(e) => { e.stopPropagation(); onSelectMockupMotionFragment?.(null); }}

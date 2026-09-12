@@ -91,6 +91,8 @@ export const PHONE_IMAGE_PREVIEWS_DEFAULT: PhoneImagePreviewConfig[] = buildPhon
 
 export function getPhoneImagePreviews(device: string): PhoneImagePreviewConfig[] {
   switch (device) {
+    case "iphone-duo":
+      return PHONE_IMAGE_PREVIEWS_DEFAULT.map(preset => ({...preset, scale:preset.scale * .58 / .9, x:preset.x * .5, y:preset.y * .5}));
     case "iphone-13-pro-max":
       return PHONE_IMAGE_PREVIEWS_IPHONE13;
     case "double_iphone_13_pro":

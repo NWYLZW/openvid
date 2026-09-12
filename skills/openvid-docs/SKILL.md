@@ -39,3 +39,5 @@ pnpm openvid start
 遇到新问题时先查对应源码和运行证据，只把验证过的必要经验补到这里；内容变长后再拆分条件性参考文档。
 
 - 制作 Dock 图标弹跳与窗口展开时，读取 [Dock 启动动画](references/dock-launch.md)。
+
+- 使用 Duo 折叠设备、开合关键帧与屏幕渐变时，读取 [Duo 折叠屏](references/duo.md)。

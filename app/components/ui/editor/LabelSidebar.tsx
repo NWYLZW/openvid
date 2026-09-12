@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 
 interface LabelSidebarProps {
+    showDuoRow?: boolean;
     audioLaneCount?: number;
     motionTracksCount?: number;
     showCameraZoomRow?: boolean;
@@ -13,6 +14,7 @@ interface LabelSidebarProps {
 }
 
 export default function LabelSidebar({
+    showDuoRow = false,
     audioLaneCount = 0,
     motionTracksCount = 0,
     showCameraZoomRow = false,
@@ -76,6 +78,7 @@ export default function LabelSidebar({
 
             {dockTracksCount > 0 && <div className="flex items-center px-3 border-t border-sky-400/30"><span className="text-[9px] uppercase font-semibold text-sky-500">Dock</span></div>}
             {pointerTracksCount > 0 && <div className="flex items-center px-3 border-t border-violet-400/30"><span className="text-[9px] uppercase font-semibold text-violet-500">Mouse</span></div>}
+            {showDuoRow && <div className="flex items-center px-3 border-t border-cyan-400/30"><span className="text-[9px] uppercase font-semibold text-cyan-500">Fold</span></div>}
             {motionTracksCount > 0 && (
                 <div
                     className="flex items-center px-3 border-t border-border bg-muted/40"

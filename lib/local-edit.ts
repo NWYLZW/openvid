@@ -1,3 +1,4 @@
+import { parseDuoEdit, type DuoEdit } from "./duo-edit.ts";
 import { parseCameraDepthOfField, type CameraDepthOfField } from "./camera-depth-of-field.ts";
 import { parseDockLaunch } from "./dock-launch.ts";
 import { parsePointerTrack, type PointerTrack } from "./pointer-track.ts";
@@ -6,6 +7,7 @@ import type { MotionKeyframe } from "./motion-keyframes";
 export interface LocalEdit {
   dockLaunch?: import("./dock-launch").DockLaunch;
   version: 1;
+  duo?: DuoEdit;
   pointerTrack?: PointerTrack;
   camera?: MotionKeyframe[];
   depthOfField?: CameraDepthOfField;
@@ -13,7 +15,7 @@ export interface LocalEdit {
   padding: number;
   roundedCorners: number;
   shadows: number;
-  mockup: 'none' | 'chrome' | 'macos';
+  mockup: 'none' | 'chrome' | 'macos' | 'iphone-duo';
   background: { from: string; to: string } | { wallpaper: string };
   zooms: Array<{ start: number; end: number; level: number; speed: number; x: number; y: number; tiltX: number; tiltY: number }>;
   titles: Array<{ text: string; start: number; end: number; y: number; fontSize: number; color: string }>;
@@ -35,12 +37,16 @@ export function parseLocalEdit(input: unknown, duration: number): LocalEdit {
     if ((value.end as number) <= (value.start as number)) throw new Error('end must follow start');
   }
   object(input);
-  const allowed = ['version','dockLaunch','pointerTrack','camera','depthOfField','speed','padding','roundedCorners','shadows','mockup','background','zooms','titles'];
+  const allowed = ['version','duo','dockLaunch','pointerTrack','camera','depthOfField','speed','padding','roundedCorners','shadows','mockup','background','zooms','titles'];
   if (Object.keys(input).some(key => !allowed.includes(key))) throw new Error('Unknown edit field');
   if (input.version !== 1) throw new Error('Unsupported edit version');
   number(input.speed, .25, 4, 'speed');
   for (const key of ['padding','roundedCorners','shadows']) number(input[key], 0, 100, key);
-  if (!['none','chrome','macos'].includes(String(input.mockup))) throw new Error('Unsupported mockup');
+  if (!['none','chrome','macos','iphone-duo'].includes(String(input.mockup))) throw new Error('Unsupported mockup');
+  if (input.mockup === 'iphone-duo') {
+    if(input.camera) throw new Error('Duo cannot use a 2D camera track');
+    input.duo = parseDuoEdit(input.duo, duration);
+  } else if (input.duo !== undefined) throw new Error('duo requires mockup iphone-duo');
   object(input.background);
   if ('wallpaper' in input.background) {
     if (typeof input.background.wallpaper !== 'string' || !/^(desktop|gradient|pattern|minimal)-\d{2}$/.test(input.background.wallpaper)) throw new Error('Invalid wallpaper name');

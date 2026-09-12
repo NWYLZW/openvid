@@ -29,6 +29,7 @@ export const RENDER_W = PHONE_W * RENDER_MULTIPLIER;
 export const RENDER_H = PHONE_H * RENDER_MULTIPLIER;
 
 export const DEVICE_3D_DIMENSIONS: Record<string, { width: number; height: number }> = {
+  'iphone-duo': { width: 1000, height: 820 },
   'phone': { width: PHONE_W, height: PHONE_H },
   'iphone': { width: PHONE_W, height: PHONE_H },
   'iphone-13-pro-max': { width: 480, height: 1000 },
@@ -39,6 +40,7 @@ export const DEVICE_3D_DIMENSIONS: Record<string, { width: number; height: numbe
 };
 
 export const PHONE_DEVICE_URLS: Record<string, string | undefined> = {
+    'iphone-duo': '/models/iphone-duo.glb',
     phone: '/models/phone-gltf.glb',
     iphone: '/models/iphone-15-pro-max.glb',
     'iphone-13-pro-max': '/models/apple_iphone_13_pro_max.glb',

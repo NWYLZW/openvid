@@ -6,6 +6,7 @@ import { REST_MOCKUP_3D_MOTION } from "@/lib/mockup-motion-3d";
 import * as THREE from "three";
 
 export interface Phone3DApi {
+  setTime?: (time: number, motion?: Mockup3DMotionTransform) => void;
   renderAt: (w: number, h: number) => void;
   restorePreview: () => void;
   hasBuiltInShadow?: boolean;
@@ -74,7 +75,8 @@ export function drawPhone3DCompositeWithZoom(
   // base transform on first use and restore it after rendering.
   const root = imagePhoneRootRef?.current;
   const motion = motion3DForFrame ?? REST_MOCKUP_3D_MOTION;
-  const hasMotion = root && motion !== REST_MOCKUP_3D_MOTION;
+  if (imagePhoneDevice === "iphone-duo") imagePhoneApiRef.current?.setTime?.(_frameTime, motion);
+  const hasMotion = imagePhoneDevice !== "iphone-duo" && root && motion !== REST_MOCKUP_3D_MOTION;
 
   if (hasMotion && root) {
     if (!cachedBase) {

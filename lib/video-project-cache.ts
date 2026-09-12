@@ -1,3 +1,4 @@
+import type { Mockup3DPersistedState } from "./mockup3d-state";
 import type { VideoTrackClip } from "@/types/video-track.types";
 import type { ZoomFragment, ZoomMovement } from "@/types/zoom.types";
 import type { AudioTrack } from "@/types/audio.types";
@@ -17,7 +18,7 @@ const CAMERA_STORE = "camera";
 const PROJECT_KEY = "singleton";
 const CAMERA_KEY = "singleton";
 
-export interface VideoProject {
+export interface VideoProject extends Partial<Mockup3DPersistedState> {
     id: typeof PROJECT_KEY;
     savedAt: number;
     schemaVersion: 1;

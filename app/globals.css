@@ -545,3 +545,8 @@ button {
     stroke-dashoffset: 0;
   }
 }
+/* Keep Duo CSS geometry independent of R3F measurement and export buffer sizes. */
+.openvid-duo-stage canvas {
+  width: 100% !important;
+  height: 100% !important;
+}

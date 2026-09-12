@@ -61,3 +61,50 @@ camera关键帧可附加 easing=[x1,y1,x2,y2]，四个控制值限定0–1，绑
 Zoom 面板与时间线现在也显示camera关键帧的实际scale曲线，标为Camera zoom，直接编辑同一mockupMotionFragment.keyframes；Motion与Zoom入口同步，不生成第二份zoomFragments或再次叠加渲染。缩放全为1×时该曲线不显示。Zoom里的Reset zoom仅将scale复位，不删除相机、鼠标或景深；原生Zoom片段仍可独立添加。UI选择状态不是工程配置副本。
 
 时间线验收：新增或移除Dock/Mouse/Camera zoom行时，检查左侧标签与右侧行的上下边界。当前Timeline父grid定义行高，左右通过subgrid共用；不要让两侧各自用flex-1计算Video行剩余高度。复现样本已检查有/无Dock和Mouse两种组合，避免只看初始静态截图。
+
+## iPhone Duo
+
+Choose **iPhone Duo** in the existing 3D Device list. The existing Configuration,
+Position, Scale, Model Properties, Lighting & Environment, and Animation & Display
+sections expose the same `duoConfig` persisted in photo/video projects and undo history.
+The Fold timeline edits opening keyframes in seconds; no keyframes means the manual
+angle is used. The bottom Fold track shows the sampled angle curve and keyframes;
+click it to seek and reopen this same 3D configuration panel. 0° is closed and 180° is open. Inner left defaults to the conversation
+list crop; inner right and the following cover use the chat detail crop. Each screen
+can use the project video/photo or an uploaded PNG/JPEG/WebP. Uploaded images are
+embedded as data URLs so reload does not depend on a temporary blob URL.
+
+For first-time recipe creation, `mockup: "iphone-duo"` accepts
+`duo: { config, transform?, environment?, glow?, autoRotate?, rotationSpeed? }`.
+`config` is the complete object returned by `defaultDuoConfig()`; `transform` accepts
+`x`, `y`, `scale`, `rotateX`, `rotateY`, and `rotateZ`. The recipe parser rejects Duo
+keyframes beyond the source duration and incompatible 2D camera tracks. A non-Duo
+recipe disables the prior 3D device.
+
+For an existing project, read `window.openvid.state().project.duoConfig` and call
+`await window.openvid.updateDuo(changes, expectedConfig)`. This compares the complete
+expected config, validates the merged config, and retains the rest of the project.
+Use `automation/update-duo.mjs` with the connected editor tab's CDP capability;
+`await window.openvid.save()` commits the project. Do not apply a full recipe merely
+to adjust one Duo parameter in an existing project.
+
+CLI config inspection uses the identical validator and timeline sampler:
+
+```sh
+pnpm openvid duo defaults > duo-config.json
+pnpm openvid duo validate duo-config.json
+pnpm openvid duo sample duo-config.json 1.6
+```
+
+These CLI commands inspect config files. Applying changes to the open editor uses
+the connected editor API above. `state().deviceReady` reports model/image readiness;
+the export API rejects a device that is still loading. Preview and export both sample `sampleDuoAngle` at
+timeline time; exporting sets the Duo time and 3D motion before rendering each frame.
+The locally prepared model is `/models/iphone-duo.glb`.
+
+Duo continuous source mode: `contentMode:'continuous'`,
+`content:{source:'video',crop:{x:0,y:0,width:1,height:1},fit:'contain',background:'#ffffff'}`.
+The following cover uses this full texture's right half in the same unfolded
+projection frame. `referenceLighting:true` selects the reference room; otherwise
+the regular environment remains active. Older configs without these fields keep
+legacy panel/environment behavior. `coverMode:'custom'` remains independent.
