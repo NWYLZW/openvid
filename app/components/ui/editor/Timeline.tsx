@@ -1,4 +1,5 @@
 "use client";
+import {dockExitEnd} from "@/lib/dock-launch";
 import { useRef, useMemo, useCallback, useEffect, useState } from "react";
 import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
 import { formatTime, getZoomMultiplier } from "@/lib/video.utils";
@@ -203,17 +204,19 @@ export function Timeline({
     const showMovementRow = !!selectedFragmentForMovement?.movementEnabled;
     const cameraZooms = useMemo(()=>mockupMotionFragments.map(cameraZoomView).filter((v):v is NonNullable<typeof v>=>v!==null),[mockupMotionFragments]);
     const showCameraZoomRow = cameraZooms.length>0;
+    const showDockRow = mockupMotionFragments.some(f=>!!f.dockLaunch);
     const showPointerRow = mockupMotionFragments.some(f=>!!f.pointerTrack);
     const totalLanesCount = useMemo(() => {
         let count = 0;
         if (showMovementRow) count += 1;
         if (showPointerRow) count += 1;
+        if (showDockRow) count += 1;
         if (showCameraZoomRow) count += 1;
         if (canvasElements.length > 0) count += elementLaneCount;
         if (audioTracks.length > 0) count += audioLaneCount;
         if (mockupMotionFragments.length > 0) count += 1;
         return count;
-    }, [showCameraZoomRow, showPointerRow, showMovementRow, canvasElements.length, elementLaneCount, audioTracks.length, audioLaneCount, mockupMotionFragments.length]);
+    }, [showDockRow, showCameraZoomRow, showPointerRow, showMovementRow, canvasElements.length, elementLaneCount, audioTracks.length, audioLaneCount, mockupMotionFragments.length]);
 
     useEffect(() => {
         if (!isDraggingTrim) {
@@ -544,7 +547,7 @@ export function Timeline({
                 <div className="flex-1 flex flex-col relative overflow-hidden">
                     <div
                         ref={trackRef}
-                        className={`flex-1 overflow-x-auto custom-scrollbar pr-2 ${audioTracks.length > 0 || elementLaneCount > 1 || canvasElements.length > 0 || showMovementRow || showPointerRow || showCameraZoomRow
+                        className={`flex-1 overflow-x-auto custom-scrollbar pr-2 ${totalLanesCount > 0
                             ? "overflow-y-auto no-scrollbar"
                             : "overflow-y-hidden"
                             }`}
@@ -553,6 +556,8 @@ export function Timeline({
                             className="relative grid min-h-full"
                             style={{
                                 gridTemplateColumns: `${TIMELINE_LABEL_WIDTH}px ${timelineWidth > 0 ? `${timelineWidth}px` : '100%'}`,
+                                // Both columns inherit these rows so headers, borders and extra space cannot shift labels.
+                                gridTemplateRows: `22px minmax(${VIDEO_ROW_MIN_HEIGHT}px, ${VIDEO_ROW_MAX_HEIGHT}px) repeat(${totalLanesCount + 1}, ${ELEMENT_ROW_HEIGHT}px) minmax(4px, 1fr)`,
                                 width: timelineWidth > 0 ? timelineWidth + TIMELINE_LABEL_WIDTH : '100%',
                                 minWidth: '100%',
                             }}
@@ -562,10 +567,11 @@ export function Timeline({
                                 audioLaneCount={audioTracks.length > 0 ? audioLaneCount : 0}
                                 showCameraZoomRow={showCameraZoomRow}
                                 motionTracksCount={mockupMotionFragments.length}
+                                dockTracksCount={mockupMotionFragments.filter(f=>f.dockLaunch).length}
                                 pointerTracksCount={mockupMotionFragments.filter(f=>f.pointerTrack).length}
                                 showMovementRow={showMovementRow}
                             />
-                            <div className="relative flex flex-col pb-1 min-w-0">
+                            <div className="relative grid grid-rows-subgrid min-w-0" style={{ gridColumn: 2, gridRow: '1 / -1' }}>
                                 <motion.div
                                     className="absolute top-0 bottom-0 z-20 flex flex-col items-center cursor-ew-resize group select-none focus:outline-none"
                                     style={{ x: playheadX, translateX: "-50%" }}
@@ -602,7 +608,7 @@ export function Timeline({
                                 </motion.div>
 
                                 <div
-                                    className="h-5.5 border-b border-border relative shrink-0 cursor-pointer bg-muted/40 select-none overflow-hidden"
+                                    className="border-b border-border relative cursor-pointer bg-muted/40 select-none overflow-hidden"
                                     onClick={handleTrackClick}
                                 >
                                     <div
@@ -631,11 +637,10 @@ export function Timeline({
                                     </div>
                                 </div>
 
-                                <div className="flex-1 flex flex-col min-h-max" onClick={handleTrackClick}>
+                                <div className="grid grid-rows-subgrid" style={{ gridRow: '2 / -2' }} onClick={handleTrackClick}>
 
                                     <div
-                                        className="flex-1 shrink-0 flex items-center py-0.5 relative"
-                                        style={{ minHeight: VIDEO_ROW_MIN_HEIGHT, maxHeight: VIDEO_ROW_MAX_HEIGHT }}
+                                        className="flex items-center py-0.5 relative"
                                     >
                                         <div className="h-full w-full rounded-md flex items-center relative bg-muted/40 dark:bg-[#0a1510] border border-border">
                                             {videoClips.length > 0 ? (
@@ -746,7 +751,7 @@ export function Timeline({
                                         </div>
                                     </div>
 
-                                    {showCameraZoomRow && <div className="relative w-full shrink-0 border-y border-blue-400/20 bg-blue-500/5" style={{height:ELEMENT_ROW_HEIGHT}} aria-label="Camera zoom timeline">
+                                    {showCameraZoomRow && <div className="relative w-full border-y border-blue-400/20 bg-blue-500/5" aria-label="Camera zoom timeline">
                                       {cameraZooms.map(z=><button key={z.id} aria-label={`Camera zoom ${z.min.toFixed(2)} to ${z.max.toFixed(2)}x`} aria-pressed={selectedCameraZoomId===z.id} className="absolute top-1 bottom-1 overflow-hidden rounded border border-blue-400/60 bg-blue-500/15 text-blue-600 dark:text-blue-300" style={{left:`${z.start/validDuration*100}%`,width:`${(z.end-z.start)/validDuration*100}%`}} onClick={e=>{e.stopPropagation();const rect=e.currentTarget.getBoundingClientRect();onSeek(z.start+(e.clientX-rect.left)/rect.width*(z.end-z.start));onSelectCameraZoom?.(z.id);}}>
                                         <span className="absolute left-2 top-0 text-[10px]">Camera zoom · {z.min.toFixed(2)}–{z.max.toFixed(2)}×</span>
                                         <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="absolute inset-x-1 bottom-0 h-7 w-[calc(100%-8px)]" aria-hidden="true"><polyline points={z.points} fill="none" stroke="currentColor" strokeWidth="1" vectorEffect="non-scaling-stroke"/></svg>
@@ -755,7 +760,6 @@ export function Timeline({
 
                                     <div
                                         className="shrink-0 w-full flex items-center relative"
-                                        style={{ minHeight: ELEMENT_ROW_HEIGHT }}
                                         onMouseMove={(e) => {
                                             if (isDraggingZoomFragment) return;
                                             const rect = e.currentTarget.getBoundingClientRect();
@@ -846,7 +850,6 @@ export function Timeline({
                                         return (
                                             <div
                                                 className="shrink-0 w-full flex items-center relative bg-black/10 dark:bg-white/10"
-                                                style={{ minHeight: ELEMENT_ROW_HEIGHT }}
                                                 onMouseMove={(e) => {
                                                     if (isDraggingMovementItem) return;
                                                     const rect = e.currentTarget.getBoundingClientRect();
@@ -935,7 +938,7 @@ export function Timeline({
                                     {canvasElements.length > 0 && (
                                         <div
                                             className="shrink-0 w-full relative overflow-hidden"
-                                            style={{ height: elementLaneCount * ELEMENT_ROW_HEIGHT }}
+                                            style={{ gridRow: `span ${elementLaneCount}` }}
                                         >
                                             <div
                                                 className="h-full w-full relative"
@@ -967,7 +970,7 @@ export function Timeline({
                                     {audioTracks.length > 0 && (
                                         <div
                                             className="shrink-0 w-full relative overflow-hidden"
-                                            style={{ height: audioLaneCount * ELEMENT_ROW_HEIGHT }}
+                                            style={{ gridRow: `span ${audioLaneCount}` }}
                                         >
                                             <div className="h-full w-full relative">
                                                 {audioTracks.map((track) => {
@@ -1001,13 +1004,13 @@ export function Timeline({
                                         </div>
                                     )}
 
+                                    {showDockRow && <div aria-label="Dock timeline" className="relative shrink-0 w-full border-y border-sky-500/20 bg-sky-500/5" style={{height:ELEMENT_ROW_HEIGHT}}>{mockupMotionFragments.filter(f=>f.dockLaunch).map(f=><button key={f.id} className="absolute top-2 rounded bg-sky-600 text-white px-3 py-2 text-xs" style={{left:`${Math.max(0,f.startTime)/validDuration*100}%`,width:`${(f.dockLaunch!.exitAfterOpen?Math.max(0,Math.min(f.endTime-f.startTime,dockExitEnd(f.dockLaunch!))):f.dockLaunch!.keepVisible?f.endTime-f.startTime:Math.min(f.endTime-f.startTime,f.dockLaunch!.start+f.dockLaunch!.bounceDuration+(f.dockLaunch!.settleDuration??(f.dockLaunch!.startFromCenter?.15:0))+f.dockLaunch!.expandDuration))/validDuration*100}%`,opacity:f.dockLaunch!.enabled?1:.4}} onClick={e=>{e.stopPropagation();onSelectMockupMotionFragment?.(f.id);onActivateMotionTool?.();onSeek(Math.max(0,f.startTime));}}>Dock launch{(f.dockLaunch!.cameraZoom??1)>1?` · Camera ${f.dockLaunch!.cameraZoom!.toFixed(2)}× → 1×`:""}</button>)}</div>}
                                     {mockupMotionFragments.some(f=>f.pointerTrack) && <div className="relative shrink-0 w-full border-y border-violet-500/20 bg-violet-500/5" style={{height:ELEMENT_ROW_HEIGHT}} aria-label="Mouse timeline">
                                         {mockupMotionFragments.filter(f=>f.pointerTrack).flatMap(f=>f.pointerTrack!.events.filter(e=>f.startTime+e.time>=Math.max(0,f.startTime)&&f.startTime+e.time<=Math.min(validDuration,f.endTime)).map(e=><button key={`${f.id}:${e.id}`} aria-pressed={selectedPointerEventId===e.id} aria-label={`${e.kind==='click'?'Click':'Move'} event at ${(f.startTime+e.time).toFixed(2)}s`} title={`${e.kind} ${(f.startTime+e.time).toFixed(2)}s`} className={`absolute top-2 -translate-x-1/2 rounded px-1.5 py-1 text-[10px] ${e.kind==='click'?'bg-violet-600 text-white':'border border-violet-400 bg-background text-violet-600'}`} style={{left:`clamp(8px, ${(f.startTime+e.time)/validDuration*100}%, calc(100% - 8px))`,opacity:f.pointerTrack!.enabled?1:.4}} onClick={ev=>{ev.stopPropagation();onSeek(f.startTime+e.time);onSelectPointerEvent?.(f.id,e.id);}}>{e.kind==='click'?'●':'◆'}</button>))}
                                     </div>}
 
                                     {mockupMotionFragments.length > 0 && (
                                         <div className="shrink-0 w-full flex items-center relative"
-                                            style={{ minHeight: ELEMENT_ROW_HEIGHT }}
                                             onClick={(e) => { e.stopPropagation(); onSelectMockupMotionFragment?.(null); }}
                                         >
                                             <div className="h-full w-full relative">

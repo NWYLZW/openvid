@@ -18,7 +18,7 @@ interface LocalAutomation {
   version: 1;
   state(): AutomationState;
   apply(edit: LocalEdit): Promise<AutomationState>;
-  updateMotion(id: string, changes: {keyframes?: MotionKeyframe[]; depthOfField?: unknown; pointerTrack?: unknown}, expected: MockupMotionFragment): Promise<AutomationState>;
+  updateMotion(id: string, changes: {keyframes?: MotionKeyframe[]; depthOfField?: unknown; pointerTrack?: unknown; dockLaunch?: unknown}, expected: MockupMotionFragment): Promise<AutomationState>;
   save(): Promise<void>;
   sources(): Promise<LibraryVideoInfo[]>;
   replaceSource(id: string): Promise<AutomationState>;
@@ -28,7 +28,7 @@ interface LocalAutomation {
 }
 declare global { interface Window { openvid?: LocalAutomation } }
 
-export function useLocalAutomation(handlers: Omit<LocalAutomation, 'version' | 'apply' | 'replaceSource' | 'updateMotion'> & { updateMotion(id: string, changes: {keyframes?: MotionKeyframe[]; depthOfField?: unknown; pointerTrack?: unknown}, expected: MockupMotionFragment): void; apply(edit: LocalEdit): void; replaceSource(id: string): Promise<string> }) {
+export function useLocalAutomation(handlers: Omit<LocalAutomation, 'version' | 'apply' | 'replaceSource' | 'updateMotion'> & { updateMotion(id: string, changes: {keyframes?: MotionKeyframe[]; depthOfField?: unknown; pointerTrack?: unknown; dockLaunch?: unknown}, expected: MockupMotionFragment): void; apply(edit: LocalEdit): void; replaceSource(id: string): Promise<string> }) {
   const current = useRef(handlers);
   useEffect(() => { current.current = handlers; });
   useEffect(() => {

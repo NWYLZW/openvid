@@ -1068,7 +1068,7 @@ export default function Editor() {
         setIsPlaying(false);
         exportVideo({
             quality,
-            fps: mockupMotionFragmentsRef.current.find(f=>f.pointerTrack?.enabled)?.pointerTrack?.fps ?? (mockupMotionFragmentsRef.current.some(f=>f.pointerTrack?.enabled) ? 60 : undefined),
+            fps: mockupMotionFragmentsRef.current.some(f=>f.dockLaunch?.enabled) ? 60 : mockupMotionFragmentsRef.current.find(f=>f.pointerTrack?.enabled)?.pointerTrack?.fps ?? (mockupMotionFragmentsRef.current.some(f=>f.pointerTrack?.enabled) ? 60 : undefined),
             videoBlob: videoBlob ?? undefined,
             transparentBackground: selectedWallpaper === -1,
             trim: trimRange.end > trimRange.start ? { start: trimRange.start, end: trimRange.end } : undefined,
@@ -2783,7 +2783,7 @@ export default function Editor() {
             const current = mockupMotionFragmentsRef.current.find(f => f.id === id);
             if (!current) throw new Error("Motion fragment no longer exists");
             const next = updateCameraFragment(current, changes, expected);
-            handleUpdateMockupMotionFragment(id, { ...next, depthOfField: next.depthOfField, pointerTrack: next.pointerTrack });
+            handleUpdateMockupMotionFragment(id, { ...next, depthOfField: next.depthOfField, pointerTrack: next.pointerTrack, dockLaunch: next.dockLaunch });
         },
         apply: (input) => {
             const edit = parseLocalEdit(input, videoDuration);
@@ -2825,6 +2825,7 @@ export default function Editor() {
                 startTime: 0, endTime: videoDuration, keyframes: edit.camera,
                 ...(edit.depthOfField ? { depthOfField: edit.depthOfField } : {}),
                 ...(edit.pointerTrack ? { pointerTrack: edit.pointerTrack } : {}),
+                ...(edit.dockLaunch ? { dockLaunch: edit.dockLaunch } : {}),
             }] : []);
             setZoomMovements([]);
             setZoomFragments(edit.zooms.map((z, i) => ({

@@ -13,6 +13,7 @@ export function remapCameraFragment(fragment: MockupMotionFragment, oldClips: Vi
     const startTime = next.startTime + sourceStart - next.trimStart;
     const oldLocalStart = old.startTime + sourceStart - old.trimStart - fragment.startTime;
     result.push({ ...fragment, id: `${fragment.id}:${next.id}`, startTime, endTime: startTime + sourceEnd - sourceStart,
+      ...(fragment.dockLaunch ? {dockLaunch:{...fragment.dockLaunch,start:fragment.dockLaunch.start-oldLocalStart}} : {}),
       keyframes: fragment.keyframes?.map(frame => ({ ...frame, time: frame.time - oldLocalStart })),
       ...(fragment.pointerTrack ? { pointerTrack: { ...fragment.pointerTrack,
         events: fragment.pointerTrack.events.map(event => ({ ...event, time: event.time - oldLocalStart })) } } : {}),

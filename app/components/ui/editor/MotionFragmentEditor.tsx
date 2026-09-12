@@ -1,5 +1,6 @@
 "use client";
 
+import { DockLaunchControls } from "./DockLaunchControls";
 import { CameraKeyframeEditor } from "./CameraKeyframeEditor";
 import { DepthOfFieldControls } from "./DepthOfFieldControls";
 import { Icon } from "@iconify/react";
@@ -82,7 +83,7 @@ export function MotionFragmentEditor({
     }
   };
 
-  if (fragment.keyframes?.length) return <CameraKeyframeEditor fragment={fragment} onUpdate={onUpdate} onDelete={onDelete} onClose={onClose} onSeek={onSeek} currentTime={currentTime}><DepthOfFieldControls fragment={fragment} onUpdate={onUpdate}/></CameraKeyframeEditor>;
+  if (fragment.keyframes?.length) return <CameraKeyframeEditor fragment={fragment} onUpdate={onUpdate} onDelete={onDelete} onClose={onClose} onSeek={onSeek} currentTime={currentTime}><DockLaunchControls fragment={fragment} onUpdate={onUpdate}/><DepthOfFieldControls fragment={fragment} onUpdate={onUpdate}/></CameraKeyframeEditor>;
 
   return (
     <div className="flex flex-col h-full text-foreground">

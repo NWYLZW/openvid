@@ -46,6 +46,7 @@ export function CameraKeyframeEditor({fragment,onUpdate,onDelete,onClose,onSeek,
   return <div className="flex h-full flex-col text-foreground">
     <div className="flex items-center gap-2 border-b border-border p-3"><DetailPageHeader label={mode==="zoom"?"Camera zoom":"Camera keyframes"} icon="ph:arrow-left-bold" onBack={onClose}/><button className="ml-auto text-xs text-destructive" onClick={onDelete}>{mode==="zoom"?"Reset zoom":"Delete motion"}</button></div>
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {fragment.dockLaunch && children}
       <p className="text-xs text-muted-foreground">{mode==="zoom"?"This is the camera scale shown on the Zoom timeline. Editing here also updates Motion. Reset zoom sets scales to 1× without deleting the camera or mouse.":"Select a keyframe to preview and adjust its camera pose. Changes are saved in this project."}</p>
       <div className="grid grid-cols-3 gap-2" aria-label="Camera keyframes">{frames.map((f,i)=><button key={i} aria-pressed={i===index} className={`rounded border p-2 text-xs ${i===index?'border-orange-500 bg-orange-500/10':'border-border'}`} onClick={()=>choose(i)}>{i+1} · {f.time.toFixed(2)}s</button>)}</div>
       <button className="w-full rounded border border-border p-2 text-xs disabled:opacity-40" disabled={duplicate||frames.length>=100} onClick={add}>Add keyframe at playhead ({local.toFixed(2)}s)</button>
@@ -60,7 +61,7 @@ export function CameraKeyframeEditor({fragment,onUpdate,onDelete,onClose,onSeek,
         <label className="flex justify-between text-xs items-center">Easing<select aria-label="Keyframe easing" className="rounded border border-border bg-background p-2" value={!easing?'smooth':JSON.stringify(easing)==='[0,0,1,1]'?'linear':JSON.stringify(easing)==='[0.22,1,0.36,1]'?'out':'custom'} onChange={e=>{const v=e.target.value;update({easing:v==='smooth'?undefined:v==='linear'?[0,0,1,1]:v==='out'?[.22,1,.36,1]:[.37,0,.63,1]});}}><option value="smooth">Smooth</option><option value="linear">Linear</option><option value="out">Ease out</option><option value="custom">Custom Bézier</option></select></label>
         {easing&&<div className="grid grid-cols-4 gap-1">{easing.map((v,i)=><label key={i} className="text-[10px] text-muted-foreground">{['X1','Y1','X2','Y2'][i]}<input aria-label={`Easing ${['X1','Y1','X2','Y2'][i]}`} className="mt-1 w-full rounded border bg-background p-1 text-foreground" type="number" min={0} max={1} step={.01} value={v} onChange={e=>{if(e.target.value==='')return;const n=Number(e.target.value);if(n>=0&&n<=1){const curve=[...easing] as [number,number,number,number];curve[i]=n;update({easing:curve});}}}/></label>)}</div>}
       </section>
-      {children}
+      {!fragment.dockLaunch && children}
     </div>
   </div>;
 }

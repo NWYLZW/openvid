@@ -18,6 +18,9 @@ import { cameraDepthSupportError, mapCameraDepthOfField, parseCameraDepthOfField
 import { reprojectDepthOfField } from "@/lib/depth-of-field";
 import { parsePointerTrack, renderPointerTrack } from "@/lib/pointer-track";
 import { disposePointerDistortion } from "@/lib/pointer-distortion";
+import {parseDockLaunch, sampleDockLaunch, sampleDockCamera, dockLaunchOrigin} from "@/lib/dock-launch";
+import {sceneCameraTransform,composeSceneCameras,drawSceneCamera} from "@/lib/scene-camera";
+import {drawDockViewport} from "@/lib/dock-launch-render";
 import { useCanvasFramePreview } from "@/hooks/useCanvasFramePreview";
 import { applyPerspective3D, disposePerspective3D } from "@/lib/perspective3d";
 import { RotationHandleIcon } from "@/components/ui/RotationHandleIcon";
@@ -793,7 +796,13 @@ function VideoCanvasInner({
         catch (error) { pointerSupportError = error instanceof Error ? error.message : String(error); }
     }
     const pointerActive = !!resolvedPointerTrack;
-    const canvasPreviewActive = depthActive || pointerActive;
+    const dockFragment=mockupMotionFragments.find(f=>f.dockLaunch?.enabled && f.dockLaunch.icons.length);
+    const dockActive=!!dockFragment && mediaType==="video" && mockupId==="none" && videoClips.length===1;
+    const desktopCameraActive=dockActive&&!!dockFragment?.dockLaunch?.followCamera;
+    const desktopBackgroundRef=useRef<HTMLCanvasElement | null>(null);
+    const desktopBackgroundKeyRef=useRef("");
+    const canvasPreviewActive = depthActive || pointerActive || dockActive;
+    const dockSceneRef=useRef<HTMLCanvasElement | null>(null);
     const frameQueueRef = useRef<Promise<void>>(Promise.resolve());
 
     const hasCameraKeyframes = mockupMotionFragments.some(f => !!f.keyframes?.length);
@@ -1412,9 +1421,8 @@ function VideoCanvasInner({
             ? filterVisibleElements(canvasElements, frameTime, videoDuration)
             : canvasElements;
 
-        const mockupMotionForFrame: MockupMotionTransform | undefined = hasMockup2DMotion
-            ? sampleCombinedMockupMotion(mockupMotionFragments, frameTime)
-            : undefined;
+        const sampledMotion=hasMockup2DMotion?sampleCombinedMockupMotion(mockupMotionFragments,frameTime):undefined;
+        const mockupMotionForFrame: MockupMotionTransform | undefined = desktopCameraActive&&sampledMotion?{...sampledMotion,scale:1,translateXPct:0,translateYPct:0}:sampledMotion;
 
         // 3D motion sampled at this export frame's time.
         const motion3DForFrame: Mockup3DMotionTransform = hasMockup3DMotion
@@ -1450,17 +1458,17 @@ function VideoCanvasInner({
         const backgroundImage = (shouldShowCustomImage || shouldShowUnsplashOverride) ? customImageRef.current : (shouldShowWallpaper ? wallpaperImageRef.current : null);
 
         // Shared helper: draw background into any 2D context
-        const drawBg = (c: CanvasRenderingContext2D) => {
+        const drawBg = (c: CanvasRenderingContext2D, bgWidth=canvasWidth, bgHeight=canvasHeight) => {
             if (shouldShowCustomColor && backgroundColorCss) {
-                applyCanvasBackground(c, backgroundColorCss, canvasWidth, canvasHeight);
+                applyCanvasBackground(c, backgroundColorCss, bgWidth, bgHeight);
             } else if (backgroundImage) {
                 c.save();
                 if (backgroundBlur > 0) {
                     c.filter = `blur(${backgroundBlur * 0.8}px)`;
                     const overflow = backgroundBlur * 2;
-                    drawImageCover(c, backgroundImage, -overflow, -overflow, canvasWidth + overflow * 2, canvasHeight + overflow * 2);
+                    drawImageCover(c, backgroundImage, -overflow, -overflow, bgWidth + overflow * 2, bgHeight + overflow * 2);
                 } else {
-                    drawImageCover(c, backgroundImage, 0, 0, canvasWidth, canvasHeight);
+                    drawImageCover(c, backgroundImage, 0, 0, bgWidth, bgHeight);
                 }
                 c.restore();
             }
@@ -1686,7 +1694,13 @@ function VideoCanvasInner({
         }
 
         ctx.save();
-        drawBg(ctx);
+        if(desktopCameraActive){
+            const bg=desktopBackgroundRef.current??(desktopBackgroundRef.current=document.createElement('canvas'));
+            const bw=Math.ceil(canvasWidth*1.5),bh=Math.ceil(canvasHeight*1.5);
+            const key=JSON.stringify([bw,bh,backgroundImage?.src,backgroundImage?.naturalWidth,backgroundColorCss,backgroundBlur]);
+            if(desktopBackgroundKeyRef.current!==key){bg.width=bw;bg.height=bh;drawBg(bg.getContext('2d')!,bw,bh);desktopBackgroundKeyRef.current=key;}
+            ctx.drawImage(bg,(bw-canvasWidth)/2,(bh-canvasHeight)/2,canvasWidth,canvasHeight,0,0,canvasWidth,canvasHeight);
+        }else drawBg(ctx);
         ctx.restore();
 
         ctx.save();
@@ -1704,6 +1718,12 @@ function VideoCanvasInner({
             await drawCameraOverlayToCtx(ctx, canvasWidth, canvasHeight, cameraVideoRef.current, videoRef.current, cameraConfig);
         }
 
+        const dock=dockActive&&dockFragment&&frameTime>=dockFragment.startTime&&frameTime<=dockFragment.endTime?parseDockLaunch(dockFragment.dockLaunch):undefined;
+        const dockTime=frameTime-(dockFragment?.startTime??0);
+        const launch=dock?sampleDockLaunch(dock,dockTime):undefined;
+        if(dock&&launch?.progress===0)return;
+        ctx.save();
+        if(dock&&launch&&launch.progress<1){const {x:originX,y:originY}=dockLaunchOrigin(dock,dockTime,canvasWidth,canvasHeight);ctx.translate(originX+(canvasWidth/2-originX)*launch.scale,originY+(canvasHeight/2-originY)*launch.scale);ctx.scale(launch.scale,launch.scale);ctx.translate(-canvasWidth/2,-canvasHeight/2);ctx.globalAlpha=launch.windowAlpha;}
         const { containerX, containerY, containerWidth, containerHeight } = computeContainer();
         let videoSource: HTMLVideoElement | HTMLCanvasElement = video!;
         let videoDrawCtx = mockupDrawCtx;
@@ -1894,16 +1914,34 @@ function VideoCanvasInner({
         if (showCameraOverlay) {
             await drawCameraOverlayToCtx(ctx, canvasWidth, canvasHeight, cameraVideoRef.current, videoRef.current, cameraConfig);
         }
+        ctx.restore();
     };
 
     // Serialize preview/export access to the foreground canvas and singleton WebGL renderer.
     const drawFrame = (highQuality: boolean = true, time?: number, target?: HTMLCanvasElement) => {
-        const frame = frameQueueRef.current.then(() => drawFrameCore(highQuality, time, target));
+        const frame = frameQueueRef.current.then(async () => {
+            await drawFrameCore(highQuality, time, target);
+            const canvas=target??exportCanvasRef.current;
+            const t=time??videoRef.current?.currentTime??0;
+            if(canvas&&dockActive&&dockFragment&&t>=dockFragment.startTime&&t<=dockFragment.endTime){
+                const opening=sampleDockCamera(dockFragment.dockLaunch!,t-dockFragment.startTime,canvas.width,canvas.height);
+                const motion=sampleCombinedMockupMotion(mockupMotionFragments,t);
+                const main=desktopCameraActive?sceneCameraTransform(motion,canvas.width,canvas.height,videoRef.current!.videoWidth,videoRef.current!.videoHeight,padding):{scale:1,x:0,y:0};
+                const pose=composeSceneCameras(main,opening);
+                if(Math.abs(pose.scale-1)>.00001||Math.abs(pose.x)>.00001||Math.abs(pose.y)>.00001){
+                    const copy=dockSceneRef.current??(dockSceneRef.current=document.createElement('canvas'));copy.width=canvas.width;copy.height=canvas.height;copy.getContext('2d')!.drawImage(canvas,0,0);
+                    const c=canvas.getContext('2d')!;
+                    if(desktopCameraActive&&desktopBackgroundRef.current)drawSceneCamera(c,copy,desktopBackgroundRef.current,pose);
+                    else{c.save();c.setTransform(pose.scale,0,0,pose.scale,pose.x,pose.y);c.drawImage(copy,0,0);c.restore();}
+                }
+                await drawDockViewport(canvas.getContext('2d')!,dockFragment.dockLaunch!,t-dockFragment.startTime,canvas.width,canvas.height,dockFragment.dockLaunch!.pinToBottom?{scale:1,x:0,y:0}:pose);
+            }
+        });
         frameQueueRef.current = frame.catch(() => {});
         return frame;
     };
     const canvasFramePreview = useCanvasFramePreview({
-        enabled: canvasPreviewActive, maxFps: pointerActive ? (resolvedPointerTrack?.fps ?? 60) : 30, width: exportDimensions.width, height: exportDimensions.height,
+        enabled: canvasPreviewActive, maxFps: dockActive ? 60 : pointerActive ? (resolvedPointerTrack?.fps ?? 60) : 30, width: exportDimensions.width, height: exportDimensions.height,
         exportingRef: isExportingRef,
         // Compare actual pixels' inputs, not callback identity: player hooks also render while paused.
         renderKey: JSON.stringify([depthSupportError, pointerSupportError, mockupMotionFragments, videoClips, videoDuration,

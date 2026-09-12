@@ -1,5 +1,6 @@
 import type { MockupMotionFragment } from './mockup-motion';
 import type { MotionKeyframe } from './motion-keyframes';
+import { parseDockLaunch } from "./dock-launch.ts";
 import { parsePointerTrack } from "./pointer-track.ts";
 import { parseCameraDepthOfField } from './camera-depth-of-field.ts';
 
@@ -12,9 +13,9 @@ function canonical(value: unknown): unknown {
 }
 
 /** Patch only the selected fragment, rejecting stale snapshots instead of overwriting human edits. */
-export function updateCameraFragment(current: MockupMotionFragment, changes: {keyframes?: MotionKeyframe[]; depthOfField?: unknown; pointerTrack?: unknown}, expected: MockupMotionFragment): MockupMotionFragment {
+export function updateCameraFragment(current: MockupMotionFragment, changes: {keyframes?: MotionKeyframe[]; depthOfField?: unknown; pointerTrack?: unknown; dockLaunch?: unknown}, expected: MockupMotionFragment): MockupMotionFragment {
   if (JSON.stringify(canonical(current)) !== JSON.stringify(canonical(expected))) throw new Error('Motion changed since it was read. Read state() again before editing.');
-  if (Object.keys(changes).some(k=>!['keyframes','depthOfField','pointerTrack'].includes(k))) throw new Error('Unknown motion update');
+  if (Object.keys(changes).some(k=>!['keyframes','depthOfField','pointerTrack','dockLaunch'].includes(k))) throw new Error('Unknown motion update');
   if (!current.keyframes?.length) throw new Error('Select a camera keyframe fragment');
   const next={...current};
   if(changes.keyframes!==undefined) {
@@ -49,6 +50,7 @@ export function updateCameraFragment(current: MockupMotionFragment, changes: {ke
       next.pointerTrack=parsed;
     }
   }
+  if("dockLaunch" in changes) next.dockLaunch=changes.dockLaunch===null?undefined:parseDockLaunch(changes.dockLaunch);
   return next;
 }
 
