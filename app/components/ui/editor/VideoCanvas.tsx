@@ -1422,8 +1422,13 @@ function VideoCanvasInner({
         const frameTime = mediaType === "video" ? (explicitTimelineTime ?? (video ? video.currentTime : 0)) : 0;
 
         if (imagePhoneActive && imagePhoneDevice === "iphone-duo") imagePhoneApiRef.current?.setTime?.(frameTime);
-        if (highQuality && imagePhoneActive && imagePhoneDevice === "iphone-duo" && (!imagePhoneApiRef.current || imagePhoneCanvasRef.current?.dataset.duoReady !== "true")) {
-            throw new Error("iPhone Duo is still loading its model or screen images. Wait for the preview before exporting.");
+        if (highQuality && imagePhoneActive && imagePhoneDevice === "iphone-duo") {
+            const deadline=performance.now()+10000;
+            while(!imagePhoneApiRef.current||imagePhoneCanvasRef.current?.dataset.duoReady!=="true"){
+                if(performance.now()>deadline)throw new Error("Duo panel video or image did not become ready. Check its media source.");
+                await new Promise<void>(resolve=>setTimeout(resolve,16));
+                imagePhoneApiRef.current?.setTime?.(frameTime);
+            }
         }
         canvas.dataset.frameTime = String(frameTime);
 

@@ -1,13 +1,51 @@
 /** Shared, serializable state for the Duo preview, export, editor and local API. */
 export interface DuoScreen {
   source: 'video' | 'image';
+  videoId?: string;
+  videoStart?: number;
+  videoSpeed?: number;
   image?: string;
   crop: { x: number; y: number; width: number; height: number };
   fit: 'contain' | 'cover';
   background: string;
 }
+export interface DuoSystemUI {
+  buttonMaterial?: 'glass' | 'flat';
+  glassRefraction?: number;
+  glassHighlight?: number;
+  glassShadow?: number;
+  borderEnabled?: boolean;
+  borderColor?: string;
+  borderWidth?: number;
+  borderOpacity?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted';
+  enabled: boolean;
+  layout?: 'overlay' | 'reserve';
+  paddingLeft?: number;
+  width: number;
+  inset: number;
+  background: string;
+  opacity: number;
+  iconColor: string;
+  buttonColor: string;
+  buttonOpacity: number;
+  buttonSize: number;
+  gap: number;
+  /** Legacy position retained for loading only; status now anchors to the aperture. */
+  statusTop?: number;
+  statusScale?: number;
+  statusStroke?: number;
+  status: boolean;
+  flashlight: boolean;
+  camera: boolean;
+}
+export function defaultDuoSystemUI(): DuoSystemUI {
+  return {buttonMaterial:'glass',glassRefraction:.7,glassHighlight:.75,glassShadow:.3,borderEnabled:false,borderColor:'#d1d5db',borderWidth:1,borderOpacity:1,borderStyle:'solid',enabled:false,layout:'overlay',paddingLeft:.025,width:.12,inset:.025,background:'#fffdf5',opacity:1,iconColor:'#ffffff',buttonColor:'#ffffff',buttonOpacity:.22,buttonSize:.065,gap:.025,statusTop:.12,statusScale:1,statusStroke:.0025,status:true,flashlight:true,camera:true};
+}
 export interface DuoConfig {
+  waitSpeed?: {start:number;end:number;multiplier:number};
   /** Missing fields retain the legacy independently configured panels. */
+  systemUI?: DuoSystemUI;
   contentMode?: 'continuous' | 'panels';
   content?: DuoScreen;
   referenceLighting?: boolean;
@@ -15,6 +53,8 @@ export interface DuoConfig {
   keyframes: Array<{ time: number; angle: number; easing?: [number, number, number, number] }>;
   blur: number;
   darkening: number;
+  /** Missing coverage blends into the source average; omitted in older projects. */
+  boundaryFill?: number;
   projection: boolean;
   transitionPower: number;
   hingeWidth: number;
@@ -30,7 +70,7 @@ export interface DuoConfig {
 }
 export function defaultDuoConfig(): DuoConfig {
   const screen = (x: number, width: number): DuoScreen => ({source: 'video', crop: {x,y:0,width,height:1}, fit:'contain', background:'#111116'});
-  return {contentMode:'continuous',content:screen(0,1),referenceLighting:true,angle:180,keyframes:[],blur:72,darkening:2,projection:true,transitionPower:1.35,hingeWidth:.35,cameraDistance:40,cameraFov:32,exposure:1.18,finish:'star-white',screenBrightness:1,left:screen(.04,.21),right:screen(.253,.747),coverMode:'right',cover:screen(.253,.747)};
+  return {systemUI:defaultDuoSystemUI(),contentMode:'continuous',content:screen(0,1),referenceLighting:true,angle:180,keyframes:[],blur:72,darkening:2,boundaryFill:1,projection:true,transitionPower:1.35,hingeWidth:.35,cameraDistance:40,cameraFov:32,exposure:1.18,finish:'star-white',screenBrightness:1,left:screen(.04,.21),right:screen(.253,.747),coverMode:'right',cover:screen(.253,.747)};
 }
 function object(value: unknown, keys: string[], label: string): asserts value is Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`Invalid ${label}: expected object`);
@@ -40,7 +80,10 @@ function number(value: unknown,min:number,max:number,label:string): asserts valu
   if(typeof value!=='number'||!Number.isFinite(value)||value<min||value>max)throw new Error(`Invalid ${label}: expected ${min}..${max}`);
 }
 function screen(value: unknown): asserts value is DuoScreen {
-  object(value,['source','image','crop','fit','background'],'Duo screen');
+  object(value,['source','image','crop','fit','background','videoId','videoStart','videoSpeed'],'Duo screen');
+  if(value.videoId!==undefined&&(typeof value.videoId!=='string'||!value.videoId||value.videoId.length>200))throw new Error('Invalid Duo video id');
+  if(value.videoStart!==undefined)number(value.videoStart,0,86400,'Duo video start');
+  if(value.videoSpeed!==undefined)number(value.videoSpeed,.1,8,'Duo video speed');
   if(!['video','image'].includes(String(value.source)))throw new Error('Invalid Duo screen source');
   if(!['contain','cover'].includes(String(value.fit)))throw new Error('Invalid Duo screen fit');
   if(typeof value.background!=='string'||!/^#[0-9a-f]{6}$/i.test(value.background))throw new Error('Invalid Duo screen background');
@@ -52,7 +95,30 @@ function screen(value: unknown): asserts value is DuoScreen {
   if(value.crop.x+value.crop.width>1.000001||value.crop.y+value.crop.height>1.000001)throw new Error('Duo crop exceeds source bounds');
 }
 export function parseDuoConfig(value: unknown): DuoConfig {
-  object(value,Object.keys(defaultDuoConfig()),'Duo config');
+  object(value,[...Object.keys(defaultDuoConfig()),'waitSpeed'],'Duo config');
+  if(value.waitSpeed!==undefined){object(value.waitSpeed,['start','end','multiplier'],'Duo wait speed');number(value.waitSpeed.start,0,86400,'wait start');number(value.waitSpeed.end,0,86400,'wait end');number(value.waitSpeed.multiplier,1,4,'wait multiplier');if(value.waitSpeed.end<=value.waitSpeed.start)throw new Error('Wait end must follow start');}
+  if(value.systemUI!==undefined){
+    const ui=value.systemUI;
+    object(ui,Object.keys(defaultDuoSystemUI()),'Duo system UI');
+    if(ui.layout!==undefined&&!['overlay','reserve'].includes(String(ui.layout)))throw new Error('Invalid Duo sidebar layout');
+    if(ui.paddingLeft!==undefined)number(ui.paddingLeft,0,.12,'Duo left padding');
+    if(ui.buttonMaterial!==undefined&&!['glass','flat'].includes(String(ui.buttonMaterial)))throw new Error('Invalid Duo button material');
+    if(ui.glassRefraction!==undefined)number(ui.glassRefraction,0,1,'Duo glass refraction');
+    if(ui.glassHighlight!==undefined)number(ui.glassHighlight,0,1,'Duo glass highlight');
+    if(ui.glassShadow!==undefined)number(ui.glassShadow,0,1,'Duo glass shadow');
+    if(ui.borderEnabled!==undefined&&typeof ui.borderEnabled!=='boolean')throw new Error('Invalid Duo border enabled');
+    if(ui.borderColor!==undefined&&(typeof ui.borderColor!=='string'||!/^#[0-9a-f]{6}$/i.test(ui.borderColor)))throw new Error('Invalid Duo border color');
+    if(ui.borderWidth!==undefined)number(ui.borderWidth,0,12,'Duo border width');
+    if(ui.borderOpacity!==undefined)number(ui.borderOpacity,0,1,'Duo border opacity');
+    if(ui.borderStyle!==undefined&&!['solid','dashed','dotted'].includes(String(ui.borderStyle)))throw new Error('Invalid Duo border style');
+    if(ui.statusScale!==undefined)number(ui.statusScale,.85,1.6,'Duo status scale');
+    if(ui.statusStroke!==undefined)number(ui.statusStroke,.001,.006,'Duo status stroke');
+    if(ui.statusTop!==undefined)number(ui.statusTop,.08,.4,'Duo system UI status top');
+    for(const key of ['enabled','status','flashlight','camera'])if(typeof ui[key]!=='boolean')throw new Error(`Invalid Duo system UI ${key}`);
+    for(const key of ['background','iconColor','buttonColor'])if(typeof ui[key]!=='string'||!/^#[0-9a-f]{6}$/i.test(ui[key] as string))throw new Error(`Invalid Duo system UI ${key}`);
+    for(const [key,min,max] of [['width',.05,.25],['inset',0,.1],['opacity',0,1],['buttonOpacity',0,1],['buttonSize',.025,.1],['gap',.005,.08]] as const)number(ui[key],min,max,`Duo system UI ${key}`);
+  }
+  if(value.boundaryFill!==undefined)number(value.boundaryFill,0,1,'Duo boundary fill');
   if(value.referenceLighting!==undefined&&typeof value.referenceLighting!=='boolean')throw new Error('Invalid Duo reference lighting');
   if(value.contentMode!==undefined&&!['continuous','panels'].includes(String(value.contentMode)))throw new Error('Invalid Duo content mode');
   if(value.content!==undefined)screen(value.content);

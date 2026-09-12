@@ -9,6 +9,7 @@ export interface TrimSettings {
 }
 
 export interface ExportSettings {
+    waitSpeed?: {start:number;end:number;multiplier:number};
     quality: ExportQuality;
     fps?: number;
     trim?: TrimSettings;

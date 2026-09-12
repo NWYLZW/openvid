@@ -44,7 +44,7 @@ export function parseLocalEdit(input: unknown, duration: number): LocalEdit {
   for (const key of ['padding','roundedCorners','shadows']) number(input[key], 0, 100, key);
   if (!['none','chrome','macos','iphone-duo'].includes(String(input.mockup))) throw new Error('Unsupported mockup');
   if (input.mockup === 'iphone-duo') {
-    if(input.camera) throw new Error('Duo cannot use a 2D camera track');
+    // Duo camera poses are routed to the native 3D sampler by the editor.
     input.duo = parseDuoEdit(input.duo, duration);
   } else if (input.duo !== undefined) throw new Error('duo requires mockup iphone-duo');
   object(input.background);

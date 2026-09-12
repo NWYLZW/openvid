@@ -1,3 +1,4 @@
+import {sampleMotionKeyframes, type MotionKeyframe} from './motion-keyframes';
 export type Mockup3DMotionPresetId =
   | "none"
   | "orbit-entrance"
@@ -383,6 +384,7 @@ export interface Mockup3DMotionFragment extends Mockup3DMotionConfig {
   startTime: number;
   endTime: number;
   custom3D?: Mockup3DMotionCustomOffsets;
+  keyframes?: MotionKeyframe[];
 }
 
 export function sample3DFragmentMotion(
@@ -395,6 +397,10 @@ export function sample3DFragmentMotion(
 
   const localTime = currentTime - fragment.startTime;
   const localDuration = fragment.endTime - fragment.startTime;
+  if(fragment.keyframes?.length){
+    const p=sampleMotionKeyframes(fragment.keyframes,localTime);
+    return {rotX:p.rotateX*Math.PI/180,rotY:p.rotateY*Math.PI/180,rotZ:p.rotateZ*Math.PI/180,posX:p.translateXPct/100,posY:-p.translateYPct/100,posZ:0,scale:p.scale,opacity:1};
+  }
 
   const base = sampleMockup3DMotion(
     { presetId: fragment.presetId, intensity: fragment.intensity, speed: fragment.speed },

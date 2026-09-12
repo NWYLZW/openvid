@@ -133,3 +133,23 @@ scale, a visible 491px canvas still produces offsets in a 1000px local box,
 causing pointer-down to miss the model. Keep Frame hover and R3F event raycasts
 in the same coordinate space. Verified drag changed rotation by the expected
 6°/15° and reverse drag restored the original pose.
+
+### System UI strip
+
+Duo model settings → System UI strip provides an optional right-edge overlay. `config.systemUI` is shared by editor, save/restore, recipe/API and screen-texture rendering during preview/export. Missing configuration keeps older projects unchanged (disabled). Use `defaultDuoSystemUI()` as the complete object for incremental `updateDuo` updates.
+
+Controls: enabled; width (0.05–0.25 of screen height); inset (0–0.1); background/iconColor/buttonColor (#RRGGBB); opacity/buttonOpacity (0–1); buttonSize (0.025–0.1); gap (0.005–0.08); status/flashlight/camera booleans. Following cover reuses the same composited texture, custom cover draws its own strip. Icons are canvas-drawn visual elements, not working OS controls. The strip overlays content rather than resizing or stretching the source. Transparent background exposes original footage; buttons use translucent fills, not backdrop blur. Large width can obscure application controls, so match color and reduce width or disable it when needed.
+
+System UI alignment: the rail, divider and bottom controls are composited into the video texture before projection/blur, so they share its fold transition. Only the camera status ring uses physical screen UV to stay registered to the aperture. The cover camera ring and bottom buttons share the measured aperture axis. Minimum effective strip width is 12% of screen height to contain the aperture ring. Old smaller widths display at this minimum. Divider fields: borderEnabled, borderColor, borderWidth (0–12 px at 1125px screen height), borderOpacity (0–1), borderStyle (solid/dashed/dotted). Ring size/stroke are statusScale/statusStroke; obsolete statusTop is accepted for old saves but no longer positions the ring.
+
+Button material: `buttonMaterial: glass|flat` (omitted = glass), `glassHighlight` and `glassShadow` (0–1) tune the canvas glass approximation. It uses translucent tint, directional edge highlights, soft shadow and compact filled glyphs; it does not implement native Liquid Glass background refraction. Existing color/opacity remain adjustable. Official visual reference: https://developer.apple.com/design/human-interface-guidelines/materials .
+
+Projection correction: system UI now samples the same `sourceUV` as video. Outer-screen UI UV is calibrated against the closed cover plane using the actual device-local eye and frame; this preserves closed-pose registration while allowing unfolding projection. Camera ring remains aperture-anchored. Do not replace sourceUV with fixed vMapUv plus blur: that creates a stationary strip even though it looks softened.
+
+Vertical projection is blended by sin²(foldAngle): fully closed/open use physical screen Y and fill the height; intermediate fold poses retain projected Y. This gives zero displacement and zero transition velocity at both endpoints while preserving the dimensional fold effect. Device pitch is independent.
+
+Reply-wait retiming: Duo Animation → Accelerate reply wait stores `waitSpeed:{start,end,multiplier}` in source-timeline seconds. It multiplies Video's global speed only inside the wait interval. Example global 2× plus wait multiplier 2 means 4× waiting. Fold keyframes remain in source seconds, so place their endpoints at wait start/end. Preview playback and MP4/GIF/WebM frame sampling use `lib/wait-speed.ts`. Variable-speed audio mixing is not implemented; use a muted source without audio tracks (audio-mixing export rejects this combination rather than desynchronizing it). The timeline currently displays the global-speed scale, not the additional wait compression; export duration comes from the piecewise speed map.
+
+Independent panel video: each DuoScreen supports optional videoId from the current origin's media library, videoStart (source offset seconds), and videoSpeed (0.1–8 multiplier against project source time). Omit videoId for the main project video. UI under each screen → Video source; Refresh media library after importing via Upload. Secondary audio is muted; the last frame holds when its source ends. Export waits for each requested secondary video frame to decode before drawing. Preserve media-library blobs together with project snapshots: videoId alone is not a portable media package.
+
+制作入场、绕铰链展开和左右屏聚焦镜头时，先读 [连续镜头运动](cinematic-continuity.md)。这是用户明确认可的关键经验：中间构图点连续通过，只在阅读/输入时停稳，避免逐段快起快停和反复反向。

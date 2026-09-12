@@ -44,3 +44,30 @@ test('continuous mode validates its one source and round-trips; legacy panel con
  const {contentMode,content,referenceLighting,...legacy}=fresh;assert.equal(parseDuoConfig(legacy).contentMode,undefined);
  assert.deepEqual(parseDuoConfig(fresh),fresh);
 });
+
+
+test('boundary fill persists through project and recipe state while old configs remain valid',()=>{
+ const {boundaryFill,...legacy}=config();assert.equal(boundaryFill,1);
+ assert.equal(parseDuoConfig(legacy).boundaryFill,undefined);
+ assert.equal(restoreMockup3DState({duoConfig:legacy}).duoConfig.boundaryFill,undefined);
+ for(const value of [0,.42,1]){
+  const updated=updateDuoConfig(legacy,{boundaryFill:value},structuredClone(legacy));
+  assert.equal(restoreMockup3DState(JSON.parse(JSON.stringify({duoConfig:updated}))).duoConfig.boundaryFill,value);
+  const input=recipe();input.duo.config=updated;
+  assert.equal(parseLocalEdit(input,10).duo.config.boundaryFill,value);
+ }
+ for(const value of [-.01,1.01,NaN,Infinity,null,'1'])assert.throws(()=>parseDuoConfig({...legacy,boundaryFill:value}),/boundary fill/);
+});
+test('system UI persists through recipe and rejects unsafe or out-of-range settings',()=>{
+  const value=config();value.systemUI.enabled=true;value.systemUI.background='#faf4e8';
+  const edit=recipe();edit.duo.config=value;
+  assert.deepEqual(parseLocalEdit(JSON.parse(JSON.stringify(edit))).duo.config.systemUI,value.systemUI);
+  for(const patch of [{width:0},{iconColor:'red'},{enabled:1},{extra:1},{buttonOpacity:NaN}])assert.throws(()=>parseDuoConfig({...value,systemUI:{...value.systemUI,...patch}}));
+  const legacy=config();delete legacy.systemUI;assert.equal(parseDuoConfig(legacy).systemUI,undefined);
+});
+test('independent panel videos preserve offsets and reject invalid media settings',()=>{
+ const c=config();c.contentMode='panels';c.left={...c.left,videoId:'uploaded-demo',videoStart:1,videoSpeed:2};
+ assert.deepEqual(parseDuoConfig(JSON.parse(JSON.stringify(c))).left,c.left);
+ assert.throws(()=>parseDuoConfig({...c,left:{...c.left,videoSpeed:0}}));
+ assert.throws(()=>parseDuoConfig({...c,left:{...c.left,videoId:''}}));
+});

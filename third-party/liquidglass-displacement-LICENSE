@@ -1,0 +1,4 @@
+Algorithm reference: MarcosDemik/liquidglass
+https://github.com/MarcosDemik/liquidglass/blob/main/packages/liquidglass/src/generate-displacement-map.ts
+The repository README identifies its license as MIT; no root LICENSE file was available at the inspected URL.
+Our circular Canvas sampler is a local adaptation of the edge-normal displacement approach, not a vendored copy of the WebGL implementation.

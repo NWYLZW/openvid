@@ -1,8 +1,14 @@
 // Adapted from jadon7/iphone-duo (MIT). See third-party/duo-animation-LICENSE.
 export const screenShader = `
+uniform sampler2D systemMap;
+uniform vec4 systemProjectionFrame;
+uniform bool systemEnabled;
+uniform vec3 statusRing;
+uniform vec3 statusColor;
 uniform float foldAngle;
 uniform float blurStrength;
 uniform float darkening;
+uniform float boundaryFill;
 uniform float transitionPower;
 uniform bool projectScreen;
 uniform vec2 uiPixel;
@@ -10,6 +16,13 @@ uniform vec4 uiFrame;
 uniform vec2 uiGradient;
 uniform vec3 uiReferenceEye;
 varying vec3 vUIPosition;
+// Preserve coverage without stretching the nearest image edge into missing content.
+vec3 coveredScreenSample(vec2 uv, vec2 feather, float lod, vec3 fill) {
+  vec2 coverage = smoothstep(-feather, feather, uv)
+    * (1.0 - smoothstep(vec2(1.0) - feather, vec2(1.0) + feather, uv));
+  return mix(fill, textureLod(map, clamp(uv, vec2(0.0), vec2(1.0)), lod).rgb,
+    coverage.x * coverage.y);
+}
 vec3 screenColor() {
   // Intersect the actual camera ray (in device-local space) with the unfolded screen.
   float depth = (0.24948 - uiReferenceEye.z) / (vUIPosition.z - uiReferenceEye.z);
@@ -34,6 +47,11 @@ vec3 screenColor() {
       sourceUV.x = mix(uiGradient.x, uiGradient.y, vMapUv.x);
     #endif
   }
+  // Vertical projection belongs to the fold transition, not either resting pose.
+  // sin² gives zero displacement and zero velocity at fully open/closed.
+  float verticalFoldWeight = sin(clamp(foldAngle, 0.0, 3.141592654));
+  verticalFoldWeight *= verticalFoldWeight;
+  sourceUV.y = mix(vMapUv.y, sourceUV.y, verticalFoldWeight);
   float edge = (sourceUV.x - uiGradient.x) / (uiGradient.y - uiGradient.x);
   float motion = smoothstep(0.0, 1.0, progress);
   float blurGradient = clamp(edge, 0.0, 1.0);
@@ -44,9 +62,11 @@ vec3 screenColor() {
   vec2 dx = dFdx(sourceUV) / uiPixel;
   vec2 dy = dFdy(sourceUV) / uiPixel;
   float baseLod = log2(max(1.0, max(length(dx), length(dy))));
-  vec2 coverage = smoothstep(-aa, aa, sourceUV)
-    * (1.0 - smoothstep(vec2(1.0) - aa, vec2(1.0) + aa, sourceUV));
-  vec3 color = textureLod(map, clamp(sourceUV, vec2(0.0), vec2(1.0)), baseLod).rgb * coverage.x * coverage.y;
+  // The final mip supplies a diffuse color from this same complete screen texture.
+  // Only missing coverage receives it; valid projected pixels keep their mapping.
+  float fillLod = ceil(log2(max(1.0 / uiPixel.x, 1.0 / uiPixel.y)));
+  vec3 fill = textureLod(map, vec2(0.5), fillLod).rgb * boundaryFill;
+  vec3 color = coveredScreenSample(sourceUV, aa, baseLod, fill);
   if (radius > 0.0) {
     // Use the same mip level at zero blur, then increase it continuously.
     float lod = max(baseLod, log2(max(1.0, radius)));
@@ -57,15 +77,48 @@ vec3 screenColor() {
         float wx = x == 0 ? 6.0 : (abs(x) == 1 ? 4.0 : 1.0);
         float wy = y == 0 ? 6.0 : (abs(y) == 1 ? 4.0 : 1.0);
         vec2 sampleUV = sourceUV + vec2(float(x), float(y)) * uiPixel * radius;
-        // Blur the image and its coverage together so color spreads into the black margin.
-        vec2 coverage = smoothstep(-footprint, footprint, sampleUV)
-          * (1.0 - smoothstep(vec2(1.0) - footprint, vec2(1.0) + footprint, sampleUV));
-        color += textureLod(map, clamp(sampleUV, vec2(0.0), vec2(1.0)), lod).rgb
-          * coverage.x * coverage.y * wx * wy / 256.0;
+        // Blur image coverage into the diffuse fill with the same normalized kernel.
+        color += coveredScreenSample(sampleUV, footprint, lod, fill) * wx * wy / 256.0;
       }
     }
   }
-  return color * (1.0 - min(1.0, effect * darkening));
+  // Continuous attenuation never clips an entire band to zero at finite strength.
+  color *= exp(-effect * darkening);
+  if(systemEnabled) {
+    vec2 overlayUV=projectScreen?sourceUV:vMapUv;
+    #ifndef INNER_UI
+      if(projectScreen)overlayUV.x=(sourceUV.x-systemProjectionFrame.x)/systemProjectionFrame.z;
+      overlayUV.x=1.0-(1.0-overlayUV.x)*7.739354/11.251287*1125.0/1600.0;
+    #endif
+    // Share the video projection; the closed-cover frame establishes alignment.
+    vec4 overlay=textureLod(systemMap,overlayUV,max(0.0,log2(max(1.0,radius))));
+    float inside=step(0.0,overlayUV.x)*step(overlayUV.x,1.0)*step(0.0,overlayUV.y)*step(overlayUV.y,1.0);
+    color=mix(color,overlay.rgb*exp(-effect*darkening),overlay.a*inside);
+  }
+  if(statusRing.x > 0.5) {
+    // Aperture center from the cover camera mesh bounds, in native screen UV.
+    // Use physical screen UV, never the camera-projected video coordinates.
+    #ifdef INNER_UI
+      vec2 p = vec2((vMapUv.x-1.0)*15.7987/11.1035 + 0.79343/11.2513,
+        vMapUv.y-(4.832818+5.625671)/11.2513);
+    #else
+      vec2 p = (vMapUv-vec2((7.179888-0.233960)/7.739354,
+        (4.832818+5.625671)/11.251287))*vec2(7.739354/11.251287,1.0);
+    #endif
+    float r=0.035*statusRing.y;
+    float dist=length(p);
+    float feather=max(fwidth(dist),0.0002);
+    float ring=1.0-smoothstep(statusRing.z*.5,statusRing.z*.5+feather,abs(dist-r));
+    // Open arc under the aperture, with three small status dots below it.
+    ring*=smoothstep(-r*.70,-r*.60,p.y);
+    float dots=0.0;
+    for(int i=-1;i<=1;i++) {
+      vec2 center=vec2(float(i)*r*.38,-r*.96);
+      dots=max(dots,1.0-smoothstep(statusRing.z,statusRing.z+feather,length(p-center)));
+    }
+    color=mix(color,statusColor,max(ring,dots));
+  }
+  return color;
 }
 `;
 export const foldShader = `

@@ -1,4 +1,5 @@
 "use client";
+import {waitSpeedAt} from '@/lib/wait-speed';
 import { updateDuoConfig } from "@/lib/duo-config";
 import { defaultPointerTrack } from "@/app/components/ui/editor/PointerTrackEditor";
 import { updateCameraFragment } from "@/lib/camera-editing";
@@ -638,6 +639,7 @@ export default function Editor() {
     }, [muteOriginalAudio]);
 
     const [globalSpeed, setGlobalSpeed] = useState<number>(1);
+    useEffect(()=>{if(videoRef.current)videoRef.current.playbackRate=waitSpeedAt(currentTime,globalSpeed,imagePhoneActive&&imagePhoneDevice==='iphone-duo'?duoConfig.waitSpeed:undefined);},[currentTime,globalSpeed,imagePhoneActive,imagePhoneDevice,duoConfig.waitSpeed]);
     const globalSpeedRef = useRef<number>(1);
     useEffect(() => { globalSpeedRef.current = globalSpeed; }, [globalSpeed]);
 
@@ -1083,10 +1085,11 @@ export default function Editor() {
             videoClipBlobs: videoClips.length > 1 ? videoBlobsRef.current : undefined,
             clipAudioStates: Object.fromEntries(clipAudioStateRef.current),
             speed: globalSpeed,
+            waitSpeed:imagePhoneActive&&imagePhoneDevice==='iphone-duo'?duoConfig.waitSpeed:undefined,
         }).finally(() => {
             isExportingRef.current = false;
         });
-    }, [videoBlob, selectedWallpaper, trimRange, muteOriginalAudio, videoHasAudioTrack, audioTracks, uploadedAudios, masterVolume, videoClips, globalSpeed, exportVideo, setIsPlaying, authUser, router, locale, pathname]);
+    }, [videoBlob, selectedWallpaper, trimRange, muteOriginalAudio, videoHasAudioTrack, audioTracks, uploadedAudios, masterVolume, videoClips, globalSpeed, imagePhoneActive, imagePhoneDevice, duoConfig.waitSpeed, exportVideo, setIsPlaying, authUser, router, locale, pathname]);
 
     const handleExportRef = useRef(handleExport);
     useEffect(() => {
@@ -2832,7 +2835,7 @@ export default function Editor() {
                 setBackgroundColorConfig({ type: "gradient", config: { type: "linear", direction: "to-br", stops: [{ color: edit.background.from, position: 0 }, { color: edit.background.to, position: 100 }] } });
             }
             setMockupMotionFragments(edit.camera?.length ? [{
-                id: "recipe-camera", presetId: "none", intensity: 50, speed: 50,
+                id: "recipe-camera", presetId: edit.duo ? "float-hold" : "none", intensity: 50, speed: 50,
                 startTime: 0, endTime: videoDuration, keyframes: edit.camera,
                 ...(edit.depthOfField ? { depthOfField: edit.depthOfField } : {}),
                 ...(edit.pointerTrack ? { pointerTrack: edit.pointerTrack } : {}),
